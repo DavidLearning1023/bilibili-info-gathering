@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bilibili-info-gathering"
+version = "0.9.1"
+description = "从 B站海量视频里为一个议题取数：广扫、定性、深挖、资产积累（MCP server + CLI）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "David Hui" }]
+keywords = ["bilibili", "mcp", "information-gathering", "osint"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = ["mcp>=1.2.0"]
+
+[project.optional-dependencies]
+images = ["pillow>=10.0"]
+# 简报的 HTML/PDF 渲染（深入模式默认产出）。markdown 必需，playwright 只影响 PDF：
+# 没有它时 HTML 照出，PDF 跳过并给安装指引。
+docs = ["markdown>=3.5", "playwright>=1.40"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+big = "big.cli:main"
+big-mcp = "big.mcp_server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "network: 需要联网与登录态（用 BIG_SKIP_NETWORK=1 跳过）",
+]

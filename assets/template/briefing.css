@@ -1,0 +1,199 @@
+/* ==========================================================================
+   议题情报简报 · 长文编辑轨样式表
+   设计依据：design-aesthetics-book / editorial-publishing（与姊妹 skill 同源）
+   ---------------------------------------------------------------------------
+   核心决策
+   · **全站单一宽度** 780px：正文、表格、概览条同宽，不做出血栏
+   · 正文 19px / 行距 1.78 / 约 41 字每行（规范硬上限 42）
+   · 字体：正文思源宋体，标题·表格·徽章·图注思源黑体
+   · 用色：墨黑 #1F2227（禁纯黑）+ **单一强调色**赭红 #A63D2F。禁渐变、禁投影
+   · 评级与可信度**不引入第二色相**：一律用灰度梯度 + 填充/描边区分
+   · 打印：A4，18mm 25mm，表格与卡片禁止跨页断开
+
+   与「视频分析报告」的差异
+   · 多了「证据概览」（评级分布 / 交叉验证分布），由脚本统计生成
+   · 表格密度更高（信源地图一行要放下 BV/标题/UP/评级/冗余/时长/发布/定性）
+   · 冲突节是双栏对照，不是长段落
+   ========================================================================== */
+:root{
+  --ink:#1F2227; --ink-2:#464C55; --mute:#6E7681; --faint:#9AA1A9;
+  --paper:#FCFBF8; --panel:#F4F2ED; --panel-2:#EDEAE3; --rule:#E0DCD4;
+  --accent:#A63D2F; --accent-soft:#F0E4E0;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",Georgia,serif;
+  --sans:"Noto Sans SC","Source Han Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,"Courier New",monospace;
+  --w:780px;
+  --gap-in:12px; --gap-out:30px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif); font-size:19px; line-height:1.78;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+.page{width:var(--w); max-width:calc(100% - 40px); margin:0 auto; padding:0 0 96px}
+.page > *{min-width:0}
+
+/* ---------- 报头 ---------- */
+.masthead{padding-top:44px}
+.kicker{font-family:var(--sans); font-size:13.5px; font-weight:600; letter-spacing:.2em;
+        color:var(--accent); margin:0 0 14px}
+h1{font-family:var(--sans); font-size:40px; font-weight:700; line-height:1.26;
+   letter-spacing:-.015em; margin:0 0 18px; text-wrap:balance}
+.meta{font-family:var(--sans); font-size:14px; line-height:1.9; color:var(--mute);
+      border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+      padding:13px 0; margin:0}
+/* ⚠️ 不要 nowrap：元信息里有「核心问题」这类长行，nowrap 会把它挤出容器被裁掉。
+   短字段靠 inline-block 自然并排，长字段自动占满整行。 */
+.meta span{margin-right:22px; display:inline-block; vertical-align:top; max-width:100%}
+.meta b{color:var(--ink-2); font-weight:600; font-variant-numeric:tabular-nums}
+
+/* ---------- 读图口径（脚本生成，2026-10-22） ----------
+   为什么要它：评级 `B2` 以前没有任何说明，读者不知道它代表什么。
+   放在报头下方而不是文末：报告的第一张表（§二 发现）就带评级列，
+   口径必须在第一次出现之前给出，不能等读者翻到附录。
+   视觉上压得比正文轻（12.5–13.5px、灰度字），避免抢走结论的位置。 */
+.legend{background:var(--panel); border-left:3px solid var(--ink);
+        padding:14px 22px 12px; margin:20px 0 0;
+        font-family:var(--sans); font-size:13px; line-height:1.8}
+.legend dl{margin:0}
+.lg-row{display:grid; grid-template-columns:104px 1fr; gap:12px;
+        padding:5px 0; border-top:1px solid var(--rule)}
+.lg-row:first-child{border-top:0; padding-top:0}
+.lg-row dt{font-size:11.5px; font-weight:700; letter-spacing:.1em; color:var(--mute);
+           text-transform:uppercase; padding-top:2px}
+.lg-row dd{margin:0; color:var(--ink-2)}
+.lg-note{font-size:12px; color:var(--mute); margin:0 0 3px; line-height:1.55}
+.lg-item{display:inline-block; margin:0 13px 2px 0; white-space:normal}
+.lg-item .grade,.lg-item .cv,.lg-item .gap{margin-right:5px}
+.lg-sep{color:var(--rule); margin:0 4px 0 2px}
+.lg-num{display:inline-block; min-width:19px; margin-right:5px; text-align:center;
+        font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
+        background:var(--paper); border:1px solid var(--rule); padding:0 4px}
+.lg-hint{margin:8px 0 0; padding-top:8px; border-top:1px dashed var(--rule);
+         font-size:12.5px; color:var(--mute); line-height:1.65}
+.lg-hint .grade{margin:0 2px}
+
+/* ---------- 证据概览（脚本统计生成） ---------- */
+.overview{background:var(--panel); padding:18px 24px; margin:16px 0 0;
+          display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 34px}
+.ov-cell dt{font-family:var(--sans); font-size:12px; font-weight:600; letter-spacing:.14em;
+            color:var(--mute); text-transform:uppercase; margin:0 0 9px}
+.ov-sub{font-weight:400; letter-spacing:.02em; text-transform:none; color:var(--faint)}
+.ov-cell dd{margin:0; font-family:var(--sans); font-size:14px}
+.ov-row{display:flex; align-items:center; gap:10px; margin:0 0 6px}
+.ov-key{width:34px; flex:0 0 34px; font-weight:600; font-size:13px; color:var(--ink-2)}
+.ov-bar{height:9px; background:var(--paper); border:1px solid var(--rule); flex:1}
+.ov-bar i{display:block; height:100%; background:var(--ink)}
+.ov-bar i.lv-a{background:var(--ink)}
+.ov-bar i.lv-b{background:var(--ink-2)}
+.ov-bar i.lv-c{background:var(--faint)}
+.ov-bar i.lv-d{background:transparent; border-right:2px solid var(--faint)}
+.ov-n{width:30px; text-align:right; font-variant-numeric:tabular-nums; color:var(--mute)}
+
+/* ---------- 标题层级 ---------- */
+h2{font-family:var(--sans); font-size:32px; font-weight:700; line-height:1.32;
+   letter-spacing:-.012em; margin:76px 0 8px; padding-top:26px;
+   border-top:2px solid var(--ink); scroll-margin-top:20px}
+h3{font-family:var(--sans); font-size:24px; font-weight:600; line-height:1.42;
+   margin:46px 0 12px; letter-spacing:-.008em}
+h4{font-family:var(--sans); font-size:20px; font-weight:600; line-height:1.5; margin:34px 0 10px}
+h2 + p, h3 + p, h4 + p{margin-top:8px}
+
+/* ---------- 正文 ---------- */
+p{margin:0 0 19px}
+strong,b{font-weight:600}
+a{color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(166,61,47,.3)}
+a:hover{border-bottom-color:var(--accent)}
+ul,ol{margin:0 0 20px; padding-left:1.4em}
+li{margin:0 0 8px}
+hr{border:0; border-top:1px solid var(--rule); margin:40px 0}
+code{font-family:var(--mono); font-size:.86em; background:var(--panel-2);
+     padding:1px 5px; border-radius:0}
+pre{background:var(--panel); border-left:3px solid var(--ink-2); padding:16px 18px;
+    overflow:auto; font-family:var(--mono); font-size:13.5px; line-height:1.7; margin:0 0 22px}
+pre code{background:none; padding:0}
+
+/* ---------- 引用块 = 提示条 ---------- */
+blockquote{margin:24px 0; padding:16px 20px; background:var(--panel);
+           border-left:3px solid var(--accent); color:var(--ink-2); font-size:17px}
+blockquote p:last-child{margin-bottom:0}
+blockquote strong{color:var(--ink)}
+
+/* ---------- 表格 ---------- */
+.tw{margin:24px 0 30px; overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-family:var(--sans); font-size:14.5px;
+      line-height:1.62}
+thead th{position:sticky; top:0; background:var(--paper); z-index:1}
+th{text-align:left; font-weight:600; font-size:12.5px; letter-spacing:.05em; color:var(--mute);
+   border-bottom:1.5px solid var(--ink); padding:0 12px 9px 0; white-space:nowrap}
+td{border-bottom:1px solid var(--rule); padding:11px 12px 11px 0; vertical-align:top}
+td:last-child,th:last-child{padding-right:0}
+tbody tr:hover{background:var(--panel)}
+td.n{font-variant-numeric:tabular-nums; white-space:nowrap}
+table.wide{font-size:13.6px}
+table.wide td{padding:9px 10px 9px 0}
+
+/* ---------- 评级徽章（灰度梯度，不引第二色相） ---------- */
+.grade{display:inline-block; font-family:var(--sans); font-size:12px; font-weight:700;
+       letter-spacing:.04em; padding:2px 7px; white-space:nowrap; line-height:1.5}
+.grade.g-A{background:var(--ink); color:var(--paper)}
+.grade.g-B{background:var(--ink-2); color:var(--paper)}
+.grade.g-C{background:var(--panel-2); color:var(--ink-2); border:1px solid var(--faint)}
+.grade.g-D{background:transparent; color:var(--mute); border:1px dashed var(--faint)}
+.grade.g-E,.grade.g-F{background:transparent; color:var(--faint); border:1px dashed var(--rule)}
+
+/* ---------- 交叉验证徽章 ---------- */
+.cv{display:inline-block; font-family:var(--sans); font-size:12px; font-weight:600;
+    padding:2px 7px; white-space:nowrap; line-height:1.5}
+.cv-strong{background:var(--ink); color:var(--paper)}
+.cv-mid{background:var(--panel-2); color:var(--ink-2); border:1px solid var(--faint)}
+.cv-weak{background:transparent; color:var(--accent); border:1px solid var(--accent)}
+
+/* ---------- 缺口三类徽章 ---------- */
+.gap{display:inline-block; font-family:var(--sans); font-size:12px; font-weight:600;
+     padding:2px 7px; white-space:nowrap; line-height:1.5}
+.gap-struct{background:var(--ink); color:var(--paper)}
+.gap-search{border:1px solid var(--ink-2); color:var(--ink-2)}
+.gap-todo{border:1px dashed var(--accent); color:var(--accent)}
+
+/* ---------- 序号（信源地图 #1..#N） ---------- */
+.idx{font-family:var(--sans); font-variant-numeric:tabular-nums; color:var(--faint);
+     font-weight:600; font-size:13px}
+
+/* ---------- 冲突双栏（把三列表格压成对照卡） ---------- */
+/* 脚本会给「冲突与未收敛处」章节里的 .tw 加 .clash。 */
+.clash table{font-size:14px}
+.clash td:first-child{border-left:2px solid var(--ink); padding-left:12px}
+.clash td:last-child{border-left:2px solid var(--accent); padding-left:12px; background:var(--panel)}
+
+/* ---------- 页脚 ---------- */
+.foot{margin-top:60px; padding-top:18px; border-top:1px solid var(--rule);
+      font-family:var(--sans); font-size:13px; color:var(--mute); line-height:1.8}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width:720px){
+  body{font-size:17px}
+  h1{font-size:30px} h2{font-size:25px} h3{font-size:20px}
+  .overview{grid-template-columns:1fr}
+  .lg-row{grid-template-columns:1fr; gap:2px}
+  .page{max-width:calc(100% - 28px)}
+}
+
+/* ---------- 打印 / PDF ---------- */
+@page{size:A4; margin:18mm 16mm 20mm 16mm}
+@media print{
+  html,body{background:#fff}
+  .page{width:auto; max-width:none; padding:0}
+  body{font-size:10.5pt; line-height:1.72}
+  h1{font-size:22pt} h2{font-size:16pt; margin-top:22pt} h3{font-size:13pt}
+  .masthead{padding-top:0}
+  a{color:var(--ink); border-bottom:none}
+  .tw,table,.overview,.legend,.lg-row,.grade,.cv,.gap{break-inside:avoid}
+  tr,td,th{break-inside:avoid}
+  h2,h3{break-after:avoid}
+  thead{display:table-header-group}
+  tbody tr:hover{background:none}
+  .no-print{display:none}
+}

@@ -1,0 +1,12 @@
+# 统一换行符：仓库里存 LF，检出时由 Git 按平台处理。
+# 不设这条的话，Windows 上提交的 CRLF 会让 macOS / Linux 用户 clone 后
+# 每个文件都显示「已修改」。
+* text=auto eol=lf
+
+# 二进制文件不做换行转换、不做文本 diff
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.docx binary

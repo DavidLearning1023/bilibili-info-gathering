@@ -1,0 +1,34 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 是声明的最低版本；3.13 是当前开发版本
+        python-version: ["3.10", "3.13"]
+    env:
+      # 冒烟测试要联网 + 需要登录态；CI 里没有 Cookie，跳过而不是假装通过
+      BIG_SKIP_NETWORK: "1"
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: 安装（运行时 + 测试 + HTML 渲染所需）
+        run: |
+          python -m pip install -U pip
+          python -m pip install -e . pytest markdown
+      - name: 单元测试（离线）
+        run: python -m pytest tests -q
+      # 不跑 scripts/check_setup.py：它会真连 B站并校验登录态，
+      # 在 CI（境外 IP、无 Cookie）里注定失败，而失败原因与代码无关。
+      # 想看完整自检，请在本机跑：python scripts/check_setup.py
