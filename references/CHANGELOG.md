@@ -10,6 +10,51 @@
 
 ---
 
+## 2026-10-23 · 未发布 · 批次 K：main 分支保护
+
+**类型**：仓库配置 + 文档（**不改任何取数与判断逻辑**）
+
+**触发**：v1.0.1 发布后 GitHub 在仓库页提示
+「Your main branch isn't protected. Protect this branch from force pushing or deletion,
+or require status checks before merging.」
+——而这次发 v1.0.1 时**确实动过 force push**（模板结构不合官方 schema，amend 后强制推的）。
+提示是对的，防护确实缺。
+
+### K1 · 保护规则（`main`）
+
+| 开关 | 值 | 作用 |
+|---|---|---|
+| `allow_force_pushes` | `false` | **禁止强推**——已发布的历史改不动 |
+| `allow_deletions` | `false` | **禁止删分支** |
+| `enforce_admins` | `true` | **对管理员同样生效**（默认是管理员绕过一切限制） |
+| `required_status_checks` | 未设 | 取舍见 K2 |
+| `required_pull_request_reviews` | 未设 | 不强制走 PR |
+
+### K2 · 为什么没设 required status checks（**实测结论，不是猜的**）
+
+在一次性测试分支上实测过三种情况：
+
+- 设上 `required_status_checks`（context = `test (3.10)` / `test (3.13)`——
+  **matrix 的每条腿都是独立 context**，填 `test` 会永远卡住）
+  ⇒ **普通推送被拒**：`GH006 ... 2 of 2 required status checks are expected`。
+  本项目既有的工作方式是「直接推 main」，开了这条就推不动了
+- 不设 ⇒ 普通推送放行、真正的非快进强推被拒（`Cannot force-push to this branch`）、
+  删分支被拒（`Cannot delete this branch`），三条都**真推**验证过
+
+⇒ 选「保工作方式、弃 CI 闸门」：**直接推 main 照旧，强推与删分支一律拒绝**。
+CI 每次 push 仍然跑、徽章红绿照旧，只是不再由 GitHub 强制卡合并。
+
+### K3 · 文档口径同步
+
+- **SECURITY.md（中英）**防护表加一行「分支保护」
+- **SECURITY.md（中英）**「已知未覆盖」加一条：**分支保护没有卡 CI**
+  （如实写，不写成「都覆盖了」）
+
+**未做**：不强制走 PR（单人维护项目，PR 流程是负担）、不设 required status checks、
+不锁分支（locked branch 连 hotfix 都推不进去）、不改 v1.0.1 的 tag 与 Release。
+
+---
+
 ## 2026-10-23 · v1.0.1 · 批次 J：Dependabot 安全更新 + Issue 模板
 
 **类型**：仓库配置 / 文档（**不改任何取数与判断逻辑**）

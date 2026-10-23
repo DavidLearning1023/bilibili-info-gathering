@@ -53,6 +53,7 @@
 | Dependabot 告警（vulnerability alerts） | ✅ 已开 | 依赖有已知漏洞时先出告警 |
 | Dependabot 安全更新 | ✅ 已开 | 自动开安全更新 PR；另有 `.github/dependabot.yml` 管常规升级 |
 | Dependabot 自动修复 | ✅ 已开 | 安全修复 PR 可自动合并 |
+| 分支保护（`main`） | ✅ 已开 | **禁止强推与删除分支**，且**对管理员同样生效**——误操作或 token 泄露都改不动已发布的历史 |
 
 ## 什么算安全问题（这个项目的真实攻击面）
 
@@ -107,6 +108,9 @@
 - **Dependabot 只能扫依赖树里的东西**。本仓库的依赖树很小（运行时只有 `mcp`），
   但**本地 ASR 那套独立环境（`~/.local/asr`）不在依赖树里**——
   它有自己的 `requirements.lock.txt`，升级要自己盯。
+- **分支保护没有卡 CI**。为了保住「直接推 `main`」的工作方式，
+  `main` 上**没有设 required status checks** ⇒ 合并 PR 时 GitHub 不会自动拦下 CI 红的改动，
+  得自己看徽章（CI 每次 push 照跑，徽章红绿照旧，只是不再由 GitHub 强制卡合并）。
 - **没有第三方安全审计**。这是一个个人维护的项目，没做过安全评审。
 - **本文件只覆盖本仓库**。姊妹项目 [bilibili-video-analysis-summary](https://github.com/DavidLearning1023/bilibili-video-analysis-summary) 另算。
 - **B站 官方 AI 小助理账号**（`AI` 开头的那些）**不会被 `injection_risk` 标出**，

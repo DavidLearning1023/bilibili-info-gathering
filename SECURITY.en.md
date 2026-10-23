@@ -58,6 +58,7 @@ separate from the vulnerability details.
 | Dependabot alerts (vulnerability alerts) | ✅ enabled | Alerts you first when a dependency has a known vulnerability |
 | Dependabot security updates | ✅ enabled | Opens a security-update PR automatically; `.github/dependabot.yml` also handles routine upgrades |
 | Dependabot automated fixes | ✅ enabled | Security-fix PRs can be merged automatically |
+| Branch protection (`main`) | ✅ enabled | **Force pushes and branch deletion are blocked**, and the rules **apply to admins too** — neither a slip nor a leaked token can rewrite published history |
 
 ## What counts as a security issue (this project's actual attack surface)
 
@@ -122,6 +123,10 @@ Listed honestly, because it is better than implying everything is covered:
 - **Dependabot can only scan what is in the dependency tree.** This repo's tree is tiny
   (only `mcp` at runtime), but **the local ASR environment (`~/.local/asr`) lives outside
   it** — it has its own `requirements.lock.txt` and you have to watch its upgrades yourself.
+- **Branch protection does not gate CI.** To keep the "push straight to `main`" workflow,
+  `main` has **no required status checks** ⇒ GitHub will not automatically block a merge
+  whose CI is red; you have to read the badge yourself (CI still runs on every push and the
+  badge does turn red — it just isn't enforced at merge time).
 - **There has been no third-party security audit.** This is a solo-maintained project and no
   security review has been performed.
 - **This policy covers this repository only.** The companion project
