@@ -417,7 +417,7 @@ python scripts/check_setup.py
 | 搜出来的结果大量跑题 | 关键词族没覆盖全 | 见 `references/search-protocol.md` |
 | `transcribe_audio` 报 `metadata_errors` | PyAV 升到了 19 | `pip install "av<19"`（见 2.6） |
 | `transcribe_audio` 报 `cublas64_12.dll not found` | 环境缺 nvidia CUDA 运行库 | 装 `nvidia-cublas-cu12`；或用 `BIG_ASR_CMD` 指向能用的解释器 |
-| `transcribe_audio` 报「BIG_ASR_CMD 指向的命令不存在」 | 路径带引号/带空格 | v0.5.0 起已能正确解析；旧版请升级，或把路径改成不带空格 |
+| `transcribe_audio` 报「BIG_ASR_CMD 指向的命令不存在」 | 路径带引号/带空格 | v1.0.0 起已能正确解析；旧版请升级，或把路径改成不带空格 |
 
 更细的排障见 `references/troubleshooting.md`。
 

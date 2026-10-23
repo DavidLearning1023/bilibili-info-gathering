@@ -881,7 +881,8 @@ def test_docs_dont_reference_nonexistent_tools():
     banned = ["search_bilibili_videos", "get_video_metadata",
               "get_video_comments", "get_video_transcript"]
     root = Path(ROOT)
-    targets = [root / "SKILL.md"] + sorted((root / "references").glob("*.md"))
+    targets = ([root / "SKILL.md", root / "README.md", root / "README.en.md"]
+               + sorted((root / "references").glob("*.md")))
     bad = []
     for f in targets:
         if f.name == "CHANGELOG.md":
@@ -894,7 +895,7 @@ def test_docs_dont_reference_nonexistent_tools():
 
 
 def test_docs_tool_count_is_consistent():
-    """文档里写的工具数必须等于实际暴露的工具数。"""
+    """文档里写的工具数必须等于实际暴露的工具数（中英文都要）。"""
     import re
     root = Path(ROOT)
     src = (root / "src" / "big" / "mcp_server.py").read_text(encoding="utf-8")
@@ -906,6 +907,33 @@ def test_docs_tool_count_is_consistent():
         for m in re.finditer(r"(\d+)\s*个工具", text):
             if int(m.group(1)) != real:
                 pytest.fail(f"{f.name} 写了「{m.group(1)} 个工具」，实际是 {real} 个")
+    # 英文版 README 是同一条口径：**只匹配复数 "tools"**，
+    # 免得把 "40 tool calls"（工具调用次数）误判成工具数。
+    en = root / "README.en.md"
+    assert en.exists(), "README.en.md 缺失（英文版必须与中文版同步维护）"
+    text = en.read_text(encoding="utf-8")
+    for m in re.finditer(r"(\d+)\s*tools\b", text):
+        if int(m.group(1)) != real:
+            pytest.fail(f"{en.name} 写了「{m.group(1)} tools」，实际是 {real}")
+
+
+def test_version_is_consistent_across_pyproject_and_package():
+    """版本号写了两处（pyproject + `big.__version__`），必须一致。
+
+    **历史教训（v1.0.0 发布时发现）**：`big.__version__` 一直停在 `0.2.0`，
+    而 `pyproject.toml` 已经是 `0.9.1`——**差了 7 个小版本都没人发现**，
+    因为 `__version__` 定义了却**全仓无人引用**。
+    现在是正式版，版本号开始对外（徽章、tag、Release），必须锁死。
+    """
+    root = Path(ROOT)
+    toml = (root / "pyproject.toml").read_text(encoding="utf-8")
+    m = re.search(r'^version\s*=\s*"([^"]+)"', toml, re.M)
+    assert m, "pyproject.toml 里找不到 version 字段"
+    from big import __version__ as pkg_version
+    assert pkg_version == m.group(1), (
+        f"版本号对不上：pyproject.toml = {m.group(1)}，"
+        f"big.__version__ = {pkg_version}"
+    )
 
 
 # ------------------------------------------------------------------ 字幕 query 静默失败

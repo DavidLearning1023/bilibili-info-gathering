@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bilibili-info-gathering"
-version = "0.9.1"
+version = "1.0.0"
 description = "从 B站海量视频里为一个议题取数：广扫、定性、深挖、资产积累（MCP server + CLI）"
 readme = "README.md"
 requires-python = ">=3.10"
