@@ -27,6 +27,10 @@
 > 改一个阈值可能让另一个判据失效——这类改动需要放在同一张桌子上看。
 > 讨论的成本，远低于事后回滚。
 
+> **开 Issue 时 GitHub 会给你三个模板**：`Bug 报告` / `方法论讨论` / `功能建议`——
+> 选对应的那一个，字段已经帮你把该说的事列全了（方法论模板还会提醒你补证据）。
+> 用空白 issue 也行，但分诊表里那几件事，模板问得更具体。
+
 **本仓库没有开 Discussions**，所以走 Issue + PR 两条路就行。
 
 ## 开发环境
@@ -58,7 +62,7 @@ $env:BIG_SKIP_NETWORK='1'        # macOS / Linux: export BIG_SKIP_NETWORK=1
 python -m pytest tests -q
 ```
 
-当前基线：**112 passed / 3 skipped**。3 个 skipped 是 `tests/test_mcp_smoke.py` 里的
+当前基线：**113 passed / 3 skipped**。3 个 skipped 是 `tests/test_mcp_smoke.py` 里的
 **联网冒烟测试**（需要网络与 B站登录态）。
 
 **联网冒烟**（需要你自己的登录态，**不要在 CI 或任何公开环境跑**）：

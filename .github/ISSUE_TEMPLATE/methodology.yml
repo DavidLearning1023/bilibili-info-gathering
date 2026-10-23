@@ -1,0 +1,57 @@
+name: 方法论讨论 / Methodology discussion
+description: 双轴评级、离场规则、观点分布等判据的异议，或想要某类议题的方法论
+title: "[方法论] "
+labels: ["methodology"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        判据都在 `references/` 里：`source-grading.md`（双轴评级）、`exit-rules.md`（离场规则）、
+        `opinion-distribution.md`（观点分布）、`search-protocol.md`（关键词族）。
+
+        **改判据前请先讨论。** 判据是 Agent 的判断依据，改一个阈值可能让另一个失效——
+        讨论的成本远低于事后回滚。
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 讨论类型 / Discussion type
+      options:
+        - 对现有判据有异议
+        - 想要某类议题的方法论（态度类 / 方法类 / 其他）
+        - 两个判据之间互相冲突
+        - 某个判据在实际使用中不好用
+    validations:
+      required: true
+
+  - type: input
+    id: rubric
+    attributes:
+      label: 涉及哪份判据 / Which rubric
+      placeholder: "references/source-grading.md（双轴评级）"
+    validations:
+      required: true
+
+  - type: textarea
+    id: situation
+    attributes:
+      label: 具体情境 / The situation
+      description: 什么议题、什么场景、现在是怎么判的、你觉得应该怎么判
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 支撑证据 / Evidence
+      description: 有真实实例最好（跑过的报告、BV 号、赞数）。**没有证据的判据改动很难讨论。**
+    validations:
+      required: false
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你建议怎么改 / Your proposal
+      description: 如果已经有具体条文，直接写出来最省事
+    validations:
+      required: false

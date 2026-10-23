@@ -1568,14 +1568,86 @@ def test_run_ids_do_not_collide_within_one_second(tmp_path, monkeypatch):
     assert r[0]["closed_by"] != "run-end", "第一轮被第二轮的 end 误闭合了"
 
 
-def test_run_ids_do_not_collide_within_one_second(tmp_path, monkeypatch):
-    """同一秒起两轮：run id 必须不同，否则 run-end 会把两条窗口互相闭合。"""
-    _cost_log(tmp_path, monkeypatch)
-    a = registry.mark_run_start("T1")["run"]
-    b = registry.mark_run_start("T2")["run"]
-    assert a != b, "同一秒内两轮拿到了同一个 run id"
-    assert b.endswith("-2") or len(b) > len(a)
-    registry.mark_run_end()
-    r = registry.cost_summary(window="runs")["runs"]
-    assert len(r) == 2 and r[0]["run"] == a and r[1]["run"] == b
-    assert r[0]["closed_by"] != "run-end", "第一轮被第二轮的 end 误闭合了"
+# ------------------------------------------- Issue 模板必须符合 GitHub 官方表单 schema
+
+def test_issue_templates_match_github_form_schema():
+    """Issue 模板的结构必须符合 GitHub 官方的 issue-forms schema。
+
+    **历史教训（v1.0.1 发布时发现）**：`markdown` 类型的 `value` 被写在了 item 层
+    （与 `attributes` 平级），`checkboxes` 的 `options` 也是。官方 schema 规定：
+    这两处**必须嵌在 `attributes` 下**，而且各分支都是 `additionalProperties: false`。
+    写错了 GitHub **不认这个表单**——模板页要么不显示，要么直接报错。
+
+    这里不引 PyYAML（为一个 lint 多加一个运行时依赖不值），按缩进解析这几个固定结构：
+    item 层的键在 4 空格缩进，`attributes` 的子键在 6 空格缩进。
+    """
+    root = Path(ROOT)
+    tdir = root / ".github" / "ISSUE_TEMPLATE"
+    forms = sorted(p for p in tdir.glob("*.yml") if p.name != "config.yml")
+    assert forms, "没有找到 Issue 模板文件（config.yml 不走表单 schema）"
+
+    item_re = re.compile(r"^  - type: (\S+)\s*$")
+    id_re = re.compile(r"^    id: (\S+)\s*$")
+    key4_re = re.compile(r"^    ([A-Za-z_]+):")
+    key6_re = re.compile(r"^      ([A-Za-z_]+):")
+    id_ok = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+    problems = []
+    for path in forms:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        try:
+            start = next(i for i, l in enumerate(lines) if l.rstrip() == "body:")
+        except StopIteration:
+            problems.append(f"{path.name}: 找不到 body: 段")
+            continue
+
+        items, cur = [], None
+        for line in lines[start + 1:]:
+            m = item_re.match(line)
+            if m:
+                cur = {"type": m.group(1), "item_keys": set(),
+                       "attr_keys": set(), "id": None}
+                items.append(cur)
+                continue
+            if cur is None:
+                continue
+            m = id_re.match(line)
+            if m:
+                cur["id"] = m.group(1)
+                continue
+            if key4_re.match(line):
+                cur["item_keys"].add(key4_re.match(line).group(1))
+                continue
+            if key6_re.match(line):
+                cur["attr_keys"].add(key6_re.match(line).group(1))
+
+        seen_ids = []
+        for it in items:
+            where = f"{path.name}: type={it['type']}"
+            # 官方 schema：value / options 只能出现在 attributes 下
+            for k in ("value", "options"):
+                if k in it["item_keys"]:
+                    problems.append(
+                        f"{where}: {k} 写在了 item 层，必须嵌在 attributes 下")
+            if "attributes" not in it["item_keys"]:
+                problems.append(f"{where}: 缺 attributes")
+                continue
+            need = {"markdown": {"value"},
+                    "checkboxes": {"options"},
+                    "dropdown": {"label", "options"},
+                    "input": {"label"},
+                    "textarea": {"label"}}.get(it["type"], set())
+            missing = need - it["attr_keys"]
+            if missing:
+                problems.append(f"{where}: attributes 缺 {sorted(missing)}")
+            if it["id"]:
+                seen_ids.append(it["id"])
+                if not id_ok.match(it["id"]):
+                    problems.append(f"{where}: id {it['id']!r} 不符合官方命名规则")
+
+        dup = {i for i in seen_ids if seen_ids.count(i) > 1}
+        if dup:
+            problems.append(f"{path.name}: id 重复 {sorted(dup)}（表单会认错字段）")
+
+    assert not problems, ("Issue 模板不符合 GitHub 官方 issue-forms schema：\n  " +
+                           "\n  ".join(problems))

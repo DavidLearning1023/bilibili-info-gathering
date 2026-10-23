@@ -10,7 +10,104 @@
 
 ---
 
-## 2026-10-23 · 未发布 · 批次 I：动态版本徽章 + CONTRIBUTING / SECURITY
+## 2026-10-23 · v1.0.1 · 批次 J：Dependabot 安全更新 + Issue 模板
+
+**类型**：仓库配置 / 文档（**不改任何取数与判断逻辑**）
+
+**触发**：v1.0.0 发布后，SECURITY.md 里如实写着「Dependabot 安全更新未开」——
+**既然写出来了，就把它开掉**，而不是留着一条自己承认的缺口。
+
+### J1 · 开启 Dependabot（三层开关，缺一层都不生效）
+
+只开 `dependabot_security_updates` 是不够的，实际要三个一起：
+
+| 端点 | 作用 | 状态 |
+|---|---|:---:|
+| `vulnerability-alerts` | Dependabot 告警的**前置开关** | ✅ 已开（返回 204） |
+| `dependabot_security_updates` | 已知漏洞时自动开安全更新 PR | ✅ 已开 |
+| `automated-security-fixes` | 自动合并安全修复 PR | ✅ 已开 |
+
+### J2 · `.github/dependabot.yml`
+
+仓库设置里的开关只管**依赖树里**的东西；显式配置文件才能把可选依赖与 CI 也纳进来：
+
+- **pip**（`/`）：`pyproject.toml` 的 `dependencies` 与 `optional-dependencies` 都会被扫
+  ⇒ `mcp`（运行时）、`Pillow` / `markdown` / `playwright` / `pytest`（可选组）全覆盖
+  - 分组：`dev-and-docs` 把四个可选依赖合成一个 PR，**`mcp` 单独出来**——
+    它是唯一影响面大的那个，不该混在大包里
+  - 频率：每周一 09:00（Asia/Hong_Kong），最多 5 个 PR 同时开着
+- **github-actions**（`/`）：CI 用的 `actions/checkout` / `actions/setup-python` 也会自动升级
+
+### J3 · Issue 模板（`.github/ISSUE_TEMPLATE/`）
+
+把 CONTRIBUTING.md 那张「该往哪儿提」的分诊表**变成可执行的形式**：
+
+- `bug_report.yml` —— 必填**问题类别**（取数 / 渲染 / 命令 / MCP 工具 / 安装 / 资产库）、
+  **版本或 commit**、**复现步骤**；可选「实际输出」与「环境」
+- `methodology.yml` —— 专给判据异议与「想要某类议题的方法论」，
+  必填**讨论类型**、**涉及哪份判据**与**具体情境**三项，
+  并明确提示「没有证据的判据改动很难讨论」
+- `feature_request.yml` —— 必填**要解决的问题**与**使用场景**，
+  并提醒「工具数变了要同步所有文档，有 lint 会直接判失败」
+- `config.yml` —— 空白 issue 允许（很多人只想问一句），但给三个 **contact_links**：
+  **安全漏洞（请勿用 Issue 报告）** / 贡献流程 / 文档索引
+
+三个模板的字段标签都是**中英双语**（`问题类别 / Category`）——仓库本身中文优先，
+但 Issue 表单没有镜像文件的机制，双语标签是唯一能让两边都读得动的做法。
+
+### J4 · 标签
+
+新建 `methodology`（判据讨论专用）、`dependencies`、`ci`；
+`bug` / `enhancement` 是 GitHub 默认标签，把描述改成双语。
+
+### J5 · 文档口径同步
+
+- **SECURITY.md**：防护表里 Dependabot 一行 ❌ → ✅；「已知未覆盖」里删掉那条，
+  换成**更准确的一条**：Dependabot 只能扫依赖树里的东西，
+  **本地 ASR 那套独立环境（`~/.local/asr`）不在依赖树里，扫不到**
+- **CONTRIBUTING.md**：分诊表补一句「开 Issue 时 GitHub 会给三个模板」
+
+### J6 · 版本号
+
+`pyproject.toml` 与 `big/__init__.py` 同步 **1.0.0 → 1.0.1**（patch：
+本版只有文档与仓库配置，**没有一行取数或判断逻辑的改动**）。
+
+### J7 · 发布前自查抓到：三个模板的表单结构不合官方 schema
+
+写完模板后，用 **GitHub 官方的 issue-forms JSON Schema**
+（`json.schemastore.org/github-issue-forms.json`，draft-07）跑了一遍 ajv 校验——
+**三个模板全挂，而且是同一类错误**：
+
+| 错在哪 | 官方要求 | 实际写成了 |
+|---|---|---|
+| `markdown` 的正文 | `attributes.value` | item 层的 `value`（与 `attributes` 平级） |
+| `checkboxes` 的选项 | `attributes.options` | item 层的 `options` |
+
+官方 schema 对这两处的规定是**必须嵌在 `attributes` 下**，且各分支
+`additionalProperties: false`。后果不是「少显示一段文字」——
+**GitHub 根本不认这个表单**，模板页要么不显示、要么直接报错。
+
+**这类错误肉眼查不出来**：结构看着完全合理，YAML 也能正常解析，
+自写的结构检查还给了绿灯。**唯一可信的口径是官方 schema。**
+
+### J8 · 补两道回归锁 + 修掉一处「假装有测试」
+
+- **新增** `tests/test_units.py::test_issue_templates_match_github_form_schema`
+  —— 零依赖（不引 PyYAML），按缩进解析这几个固定结构，锁死 J7 那两条规则。
+  **反向验证过**：把模板改回错的写法，这条测试确实会失败
+  （不会失败的测试等于没有测试）
+- **顺带修掉**：`tests/test_units.py` 里 `test_run_ids_do_not_collide_within_one_second`
+  **写了两遍**——后一份把前一份覆盖掉，pytest 只跑一份，另一份是**死代码**
+  （看着像有测试，实际从未被独立执行）。两份逐字节相同，删掉重复的那份。
+- **基线随之从 112 → 113 passed / 3 skipped**，CONTRIBUTING.md（中英）同步
+
+**未做**：不发版（本批随 **v1.0.1** 一起发布）、不写 CODE_OF_CONDUCT.md
+（行为准则写在 CONTRIBUTING.md 里并指向 GitHub 社区准则）、不开 Discussions、
+不写 PR 模板（PR 自查表已在 CONTRIBUTING.md 里）。
+
+---
+
+## 2026-10-23 · v1.0.1 · 批次 I：动态版本徽章 + CONTRIBUTING / SECURITY
 
 **类型**：文档 / 仓库配置（**不改任何取数与判断逻辑**）
 
@@ -66,9 +163,8 @@
   CONTRIBUTING 与 SECURITY；「隐私与合规」一节指向 RISK.md（未动）
 - 顶部语言切换条的样式与两个 README **完全一致**（当前语言加粗）
 
-**未做**：不发版（本批改动尚未进入任何 Release）、不改 `pyproject.toml` 版本号
-（仍是 `1.0.0`，`big.__version__` 同步为 `1.0.0`）、不开 Dependabot 安全更新、
-不写 Issue 模板。
+**未做**：本批本身不发版（随 **v1.0.1** 一起发布，见批次 J）；不开 Dependabot 安全更新、
+不写 Issue 模板（这两项在**批次 J** 里做了）。
 
 ---
 

@@ -1,0 +1,77 @@
+name: Bug 报告 / Bug report
+description: 取数结果不对、报告渲染不对、命令报错、MCP 工具调不出来等
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        谢谢！先确认一下这不是「方法论讨论」——判据的异议请用**方法论讨论**模板。
+
+        提交前建议跑一次离线测试：`BIG_SKIP_NETWORK=1 python -m pytest tests -q`
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: 问题类别 / Category
+      options:
+        - 取数结果不对（数据、字段、时序）
+        - 报告渲染不对（HTML / PDF / 排版）
+        - 命令报错（`big` / `big-mcp`）
+        - MCP 工具调不出来，或调错了工具
+        - 安装或自检失败（`check_setup.py`）
+        - 资产库 / 账本异常
+        - 其他
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 涉及的版本或 commit / Affected version or commit
+      description: 版本号，或 `git rev-parse HEAD` 的输出
+      placeholder: "v1.0.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤 / Reproduction steps
+      description: 越具体越好。如果是取数问题，请给出**议题名**与相关 **BV 号**
+      placeholder: |
+        1. 运行的命令，或对 Agent 说的话：
+        2. 期望结果：
+        3. 实际结果：
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际输出 / Relevant output
+      description: 报错信息、JSON 片段，或报告里对应的那一段
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境 / Environment
+      description: Python 版本、操作系统、是否装了可选依赖（`images` / `docs`）
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前自查 / Before submitting
+      options:
+        - label: 我已搜索过现有 issue，确认不是重复
+          required: true
+        - label: 这**不是**安全漏洞（安全问题请走私有报告）
+          required: true
+        - label: 我已跑过 `BIG_SKIP_NETWORK=1 python -m pytest tests -q`
+          required: false

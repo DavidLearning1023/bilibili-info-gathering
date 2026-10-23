@@ -12,7 +12,8 @@
 
 | 版本 | 受支持 | 说明 |
 |---|:---:|---|
-| `v1.0.0`（`main` 分支） | ✅ | 当前正式版 |
+| `v1.0.1`（`main` 分支） | ✅ | 当前正式版 |
+| `v1.0.0` | ⚠️ | 建议升到 `v1.0.1`：多了动态版本徽章、贡献指南与安全策略 |
 | < `v1.0.0` | ❌ | 从未发版（仓库此前 0 个 tag） |
 
 修复只会进 `main`，然后随下个版本发布。**没有长期维护的旧版本分支**——个人维护项目，请用最新版。
@@ -49,7 +50,9 @@
 | Secret scanning | ✅ 已开 | GitHub 托管，自动扫公开仓库里的疑似凭据 |
 | Secret scanning push protection | ✅ 已开 | **推送时拦截**，不是事后才发现 |
 | 私有漏洞报告 | ✅ 已开 | 就是上面「报告漏洞」那一节的入口 |
-| Dependabot 安全更新 | ❌ 未开 | 见下方「已知未覆盖」 |
+| Dependabot 告警（vulnerability alerts） | ✅ 已开 | 依赖有已知漏洞时先出告警 |
+| Dependabot 安全更新 | ✅ 已开 | 自动开安全更新 PR；另有 `.github/dependabot.yml` 管常规升级 |
+| Dependabot 自动修复 | ✅ 已开 | 安全修复 PR 可自动合并 |
 
 ## 什么算安全问题（这个项目的真实攻击面）
 
@@ -101,8 +104,9 @@
 
 诚实列出来，比让人以为「都覆盖了」好：
 
-- **Dependabot 安全更新未开**（`dependabot_security_updates` 关闭）。依赖极少、风险有限，
-  但没开就是没开。
+- **Dependabot 只能扫依赖树里的东西**。本仓库的依赖树很小（运行时只有 `mcp`），
+  但**本地 ASR 那套独立环境（`~/.local/asr`）不在依赖树里**——
+  它有自己的 `requirements.lock.txt`，升级要自己盯。
 - **没有第三方安全审计**。这是一个个人维护的项目，没做过安全评审。
 - **本文件只覆盖本仓库**。姊妹项目 [bilibili-video-analysis-summary](https://github.com/DavidLearning1023/bilibili-video-analysis-summary) 另算。
 - **B站 官方 AI 小助理账号**（`AI` 开头的那些）**不会被 `injection_risk` 标出**，

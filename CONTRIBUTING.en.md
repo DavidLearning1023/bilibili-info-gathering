@@ -29,6 +29,12 @@ take completely different paths.**
 > agent judges with. Changing one threshold can invalidate another — such changes need to be
 > looked at together. Discussing first costs far less than rolling back later.
 
+> **When you open an Issue, GitHub offers three templates**: `Bug report` /
+> `Methodology discussion` / `Feature request`. Pick the matching one — the fields already
+> spell out what needs saying (the methodology template will also nudge you to bring
+> evidence). A blank Issue works too, but the templates ask the questions the triage table
+> above only gestures at.
+
 **Discussions are not enabled on this repository**, so Issues and PRs are the only two paths.
 
 ## Development setup
@@ -61,7 +67,7 @@ $env:BIG_SKIP_NETWORK='1'        # macOS / Linux: export BIG_SKIP_NETWORK=1
 python -m pytest tests -q
 ```
 
-Current baseline: **112 passed / 3 skipped**. The 3 skipped are the **networked smoke tests**
+Current baseline: **113 passed / 3 skipped**. The 3 skipped are the **networked smoke tests**
 in `tests/test_mcp_smoke.py` (they need network access and a Bilibili login session).
 
 **Networked smoke test** (needs your own login session — **never run it in CI or any public
