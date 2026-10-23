@@ -1,0 +1,52 @@
+# Dependabot 配置
+#
+# 目的：依赖有更新时**自动开 PR**，而不是等出事再修。
+# 运行时依赖极少（只有 mcp），但 Pillow / playwright / markdown 也在依赖树里，
+# 同样需要跟上；CI 用的 GitHub Actions 也要。
+#
+# 仓库设置里同时开了：
+#   vulnerability-alerts + dependabot_security_updates + automated-security-fixes
+# ⇒ 有已知漏洞时会先出一条安全告警（走 PR），而不是只等版本更新。
+#
+# 参考：https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options
+
+version: 2
+
+updates:
+  # Python 依赖：pyproject.toml 里的 dependencies 与 optional-dependencies 都会被扫
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Hong_Kong"
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+    commit-message:
+      prefix: "deps"
+    groups:
+      # 开发与渲染用的可选依赖放一起，别每次升级都开三个 PR
+      dev-and-docs:
+        patterns:
+          - "pytest"
+          - "markdown"
+          - "playwright"
+          - "pillow"
+        update-types:
+          - "minor"
+          - "patch"
+      # 运行时依赖 mcp 单独出来——它是唯一影响面大的那个
+
+  # CI 用的 GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Hong_Kong"
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "ci"]
+    commit-message:
+      prefix: "deps"

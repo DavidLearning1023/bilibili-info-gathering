@@ -29,6 +29,12 @@ take completely different paths.**
 > agent judges with. Changing one threshold can invalidate another — such changes need to be
 > looked at together. Discussing first costs far less than rolling back later.
 
+> **When you open an Issue, GitHub offers three templates**: `Bug report` /
+> `Methodology discussion` / `Feature request`. Pick the matching one — the fields already
+> spell out what needs saying (the methodology template will also nudge you to bring
+> evidence). A blank Issue works too, but the templates ask the questions the triage table
+> above only gestures at.
+
 **Discussions are not enabled on this repository**, so Issues and PRs are the only two paths.
 
 ## Development setup

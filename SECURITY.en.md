@@ -13,7 +13,8 @@ that are already in place, and how to report a problem.
 
 | Version | Supported | Notes |
 |---|:---:|---|
-| `v1.0.0` (the `main` branch) | ✅ | Current release |
+| `v1.0.1` (the `main` branch) | ✅ | Current release |
+| `v1.0.0` | ⚠️ | Move to `v1.0.1`: adds the dynamic version badge, the contributing guide and this policy |
 | < `v1.0.0` | ❌ | Never released (the repo had 0 tags before) |
 
 Fixes land on `main` and ship with the next release. **There are no long-lived maintenance
@@ -54,7 +55,9 @@ separate from the vulnerability details.
 | Secret scanning | ✅ enabled | GitHub-managed; scans the public repo for suspected credentials |
 | Secret scanning push protection | ✅ enabled | Blocks on **push**, not discovered after the fact |
 | Private vulnerability reporting | ✅ enabled | This is the entry point in "Reporting a vulnerability" above |
-| Dependabot security updates | ❌ not enabled | See "Known gaps" below |
+| Dependabot alerts (vulnerability alerts) | ✅ enabled | Alerts you first when a dependency has a known vulnerability |
+| Dependabot security updates | ✅ enabled | Opens a security-update PR automatically; `.github/dependabot.yml` also handles routine upgrades |
+| Dependabot automated fixes | ✅ enabled | Security-fix PRs can be merged automatically |
 
 ## What counts as a security issue (this project's actual attack surface)
 
@@ -116,8 +119,9 @@ channel above** — do not open a public Issue.
 
 Listed honestly, because it is better than implying everything is covered:
 
-- **Dependabot security updates are off** (`dependabot_security_updates` disabled). The
-  dependency surface is tiny and the risk is limited, but off is off.
+- **Dependabot can only scan what is in the dependency tree.** This repo's tree is tiny
+  (only `mcp` at runtime), but **the local ASR environment (`~/.local/asr`) lives outside
+  it** — it has its own `requirements.lock.txt` and you have to watch its upgrades yourself.
 - **There has been no third-party security audit.** This is a solo-maintained project and no
   security review has been performed.
 - **This policy covers this repository only.** The companion project

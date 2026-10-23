@@ -9,4 +9,4 @@
 写在 SKILL.md 与 references/ 里，不进代码——代码只管"拿到干净的数据"。
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"

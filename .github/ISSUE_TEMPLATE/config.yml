@@ -1,0 +1,19 @@
+# Issue 模板的入口配置。
+#
+# 空白 issue 是允许的（很多人只想问一句），但下面三个链接能解决大部分场景：
+# **安全问题不要用 issue**——公开 issue 会让漏洞在修复前扩散。
+
+blank_issues_enabled: true
+
+contact_links:
+  - name: 🔒 安全漏洞（请勿用 Issue 报告）
+    url: https://github.com/DavidLearning1023/bilibili-info-gathering/security/policy
+    about: 走 GitHub 私有漏洞报告（Security → Report a vulnerability），只有维护者可见。公开 issue 会让漏洞提前扩散。
+
+  - name: 📖 贡献流程与开发环境
+    url: https://github.com/DavidLearning1023/bilibili-info-gathering/blob/main/CONTRIBUTING.md
+    about: 开发环境、两套测试命令、commit 规范、PR 自查表，以及「该往哪儿提」的分诊表。
+
+  - name: 🧭 文档索引
+    url: https://github.com/DavidLearning1023/bilibili-info-gathering#文档索引
+    about: 双轴评级、离场规则、观点分布等判据都在 references/ 里；方法论讨论请用「方法论讨论」模板。
