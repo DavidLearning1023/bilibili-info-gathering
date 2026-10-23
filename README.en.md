@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/DavidLearning1023/bilibili-info-gathering/actions/workflows/tests.yml"><img alt="tests" src="https://github.com/DavidLearning1023/bilibili-info-gathering/actions/workflows/tests.yml/badge.svg"></a>
-  <img alt="version" src="https://img.shields.io/badge/version-v1.0.0-6E56CF.svg">
+  <img alt="version" src="https://img.shields.io/github/v/release/DavidLearning1023/bilibili-info-gathering?label=version&color=6E56CF">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6E56CF.svg">
@@ -479,6 +479,8 @@ Agreement and local law; **do not use it for commercial purposes or large-scale 
 | [INSTALL.md](INSTALL.md) | It won't install / you want the agent to recognize this skill / you're a maintainer / **how to install local ASR** |
 | [SKILL.md](SKILL.md) | The agent's judgement-layer rules (three-stage pipeline, dual-axis grading, exit rules) |
 | [RISK.md](RISK.md) | Risk and compliance boundaries (worth reading before you use it) |
+| [CONTRIBUTING.en.md](CONTRIBUTING.en.md) / [中文](CONTRIBUTING.md) | Want to contribute (dev setup, tests, commit conventions, PR checklist) |
+| [SECURITY.en.md](SECURITY.en.md) / [中文](SECURITY.md) | Security boundaries and how to report a vulnerability (**never a public Issue**) |
 | [examples/](examples/) | A complete artifact rendered as HTML |
 | `references/mcp-tools.md` | How to use the 14 tools, how to pick parameters, which traps exist |
 | `references/search-protocol.md` | How to design keyword families (stage 0 decides everything) |
@@ -510,6 +512,11 @@ This project has **one maintainer**, which means a few things matter more from y
 
 Companion project: [bilibili-video-analysis-summary](https://github.com/DavidLearning1023/bilibili-video-analysis-summary)
 — single-video deep reading, sharing the same data-fetching layer.
+
+**The full contribution workflow** (dev setup, test commands, commit conventions, PR checklist)
+is in [CONTRIBUTING.en.md](CONTRIBUTING.en.md);
+**if you find a security problem, do not open a public Issue** ⇒ see
+[SECURITY.en.md](SECURITY.en.md).
 
 ---
 

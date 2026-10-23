@@ -10,6 +10,68 @@
 
 ---
 
+## 2026-10-23 · 未发布 · 批次 I：动态版本徽章 + CONTRIBUTING / SECURITY
+
+**类型**：文档 / 仓库配置（**不改任何取数与判断逻辑**）
+
+**触发**：v1.0.0 发布后做的一轮收尾——把「在维护」「可参与」这两件事从**文字承诺**变成
+**仓库里真实存在的东西**。
+
+### I1 · 版本徽章改成动态的
+
+- 旧：静态 `img.shields.io/badge/version-v1.0.0-6E56CF.svg`——**每次升版都要记得手改**，
+  忘了就是一个谎报版本号的徽章
+- 新：`img.shields.io/github/v/release/DavidLearning1023/bilibili-info-gathering?label=version&color=6E56CF`
+  ⇒ **永久跟随最新 Release**，且**保住了原来的紫色配色**（`color=6E56CF`）
+- 代价：fork 场景下会显示 "no release"（因为 fork 没有 Release）。这是**唯一**的取舍，
+  换来的是主线永远不需要再手改版本号
+
+### I2 · 补 CONTRIBUTING.md / CONTRIBUTING.en.md
+
+按行业规范写，但内容**全部按这个项目的真实情况**填，不写通用模板：
+
+- **分诊表**「该往哪儿提」：改判据要先讨论 / 修 bug 可直接提 / 改文档可直接提 / 安全问题走
+  另一条路——**因为判据是 Agent 的判断依据，改一个阈值可能让另一个失效**
+- 开发环境、依赖组、离线与联网两套测试命令（含**真实基线**：112 passed / 3 skipped；
+  `check_setup.py` 预期输出行）
+- **文档 lint 表**：工具数一致 / 错工具名 / 版本号一致——这三条是本项目的特色，写清楚了
+- commit 规范（Conventional Commits + 中文描述）、CHANGELOG 约定、
+  **「每句『我做了什么』都要能机械回查」**（附本项目自己栽过的两个实例）
+- 体积口径统一 KiB、**不提交的东西**清单（凭据 / `.registry/` / `分析报告库/` …）
+- PR 自查表、锚点别凭记忆写（给出 `github-slugger` 的本地校验法）、行为准则、**不接受的贡献**
+- 明确写了**不要求 CLA / DCO**（个人维护项目，流程越简单越好）
+
+### I3 · 补 SECURITY.md / SECURITY.en.md
+
+同样按行业规范，但**攻击面写的是这个项目的真实攻击面**，不是通用模板：
+
+- 报告渠道：**已开启 GitHub 私有漏洞报告**（`Security → Report a vulnerability`），
+  并明确写「**不要用公开 Issue 报漏洞**」+ 给备用路径（只说类别，细节私信）
+  + 给了**具体的信息清单**与**响应时限下限**（7 天首响 / 30 天修复或缓解）
+- **已启用的防护**逐条列出：secret scanning ✅、push protection ✅、私有漏洞报告 ✅、
+  Dependabot 安全更新 ❌
+- 五类真实安全问题：**凭据泄露**（含「`分析报告库/` 产物未做匿名化」这条容易漏的）、
+  **提示词注入**（含「`injection_risk` 只是关键词匹配、不能当证据」）、**路径逃逸**
+  （议题名里的 `/`）、**依赖供应链**（运行时只有 `mcp`；ASR 在依赖树外）、**使用边界**
+- **已知未覆盖**诚实列出：Dependabot 未开 / 无第三方审计 / 只覆盖本仓库 /
+  B站官方 AI 小助理不会被 `injection_risk` 标出
+- 非安全问题分流回 CONTRIBUTING
+
+### I4 · 仓库配置与 README 接入
+
+- **私有漏洞报告已开启**（`private-vulnerability-reporting`）——不开启的话，
+  SECURITY.md 里写的报告渠道就是**不能用的**，那份文件等于没写
+- README.md / README.en.md 的**文档索引**各加两行（CONTRIBUTING / SECURITY，含中英双语入口）
+- README.md 的「参与与反馈」与 README.en.md 的「Contributing」末尾各加一句指向
+  CONTRIBUTING 与 SECURITY；「隐私与合规」一节指向 RISK.md（未动）
+- 顶部语言切换条的样式与两个 README **完全一致**（当前语言加粗）
+
+**未做**：不发版（本批改动尚未进入任何 Release）、不改 `pyproject.toml` 版本号
+（仍是 `1.0.0`，`big.__version__` 同步为 `1.0.0`）、不开 Dependabot 安全更新、
+不写 Issue 模板。
+
+---
+
 ## 2026-10-23 · v1.0.0 · 正式版：首次打 tag 发布
 
 **类型**：正式版发布（**首个带 tag 的版本**）

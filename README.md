@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/DavidLearning1023/bilibili-info-gathering/actions/workflows/tests.yml"><img alt="tests" src="https://github.com/DavidLearning1023/bilibili-info-gathering/actions/workflows/tests.yml/badge.svg"></a>
-  <img alt="version" src="https://img.shields.io/badge/version-v1.0.0-6E56CF.svg">
+  <img alt="version" src="https://img.shields.io/github/v/release/DavidLearning1023/bilibili-info-gathering?label=version&color=6E56CF">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6E56CF.svg">
@@ -444,6 +444,8 @@ aid / mid / 播放 / 弹幕数 / 评论数 / 收藏 / 标签 / 简介**，且 `p
 | [INSTALL.md](INSTALL.md) | 装不上、想让 Agent 认这个 skill、维护者怎么开发、**本地 ASR 怎么装** |
 | [SKILL.md](SKILL.md) | Agent 的判断层规则（三阶段流程、双轴评级、离场规则） |
 | [RISK.md](RISK.md) | 风险与合规边界（用之前建议读一遍） |
+| [CONTRIBUTING.md](CONTRIBUTING.md) / [English](CONTRIBUTING.en.md) | 想参与贡献（开发环境、测试、commit 规范、PR 自查表） |
+| [SECURITY.md](SECURITY.md) / [English](SECURITY.en.md) | 安全边界与漏洞报告方式（**安全问题不要开公开 Issue**） |
 | [examples/](examples/) | 一份完整产物的 HTML 渲染样例 |
 | `references/mcp-tools.md` | 14 个工具怎么用、参数怎么定、哪些坑 |
 | `references/search-protocol.md` | 关键词族怎么设计（阶段 0 决定成败） |
@@ -472,6 +474,10 @@ aid / mid / 播放 / 弹幕数 / 评论数 / 收藏 / 标签 / 简介**，且 `p
 
 姊妹项目：[bilibili-video-analysis-summary](https://github.com/DavidLearning1023/bilibili-video-analysis-summary)
 ——单条视频精读，与本项目共用同一套取数层。
+
+**完整的贡献流程**（开发环境、测试命令、commit 规范、PR 自查表）见
+[CONTRIBUTING.md](CONTRIBUTING.md)；
+**发现安全问题**请不要开公开 Issue ⇒ 见 [SECURITY.md](SECURITY.md)。
 
 ---
 
