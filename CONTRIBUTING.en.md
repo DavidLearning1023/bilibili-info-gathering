@@ -148,6 +148,35 @@ Before writing "92 KB", confirm the file really is 94,312 bytes.
 | `.workbuddy/` | the agent session workspace (contains absolute local paths) |
 | `BILI_SESSDATA` / `cookies.json` / `*.cookie` | credentials — **never, under any circumstance** |
 
+> Since 2026-10-27, `.registry/` and `分析报告库/` can be pointed outside the project with
+> `BIG_REGISTRY_DIR` / `BIG_REPORT_DIR` (handy for accumulating them in your own private repo).
+> When pointed outside they are not part of the tree — but **if you leave both variables unset,
+> they still land in the project root**, so the warnings above still apply.
+
+## Experience docs: `references/` or a private repo?
+
+One test: **would this still hold for someone else, on another machine?** Yes ⇒ `references/`; no ⇒ a private repo.
+
+| Form | Where it goes |
+|---|---|
+| Criteria, process, pitfall lists (transferable) | **public repo**, `references/` |
+| First-person retrospective ("I assumed…", "what I got wrong", "how I'd schedule it next time") | **private repo** |
+
+The same experience usually yields both: write the retrospective privately, then extract the
+transferable part into criteria and add it to `references/`. `character-portrait-playbook.md`
+came about exactly this way — it keeps character names and like counts because **a criterion only
+holds up when there is an example to back it**; delete the examples and the criteria still stand,
+which is what makes it general.
+
+Three rules:
+
+1. **Cases illustrate, they don't conclude.** Character names and like counts are fine; "I don't
+   trust this creator" is not — that is a personal grade and belongs in `.registry/`.
+2. **Timestamp every measured number** (e.g. "2026-10 snapshot"). Views and likes drift daily;
+   an undated number reads as an error six months later.
+3. **Keep the first person in the private repo.** A sentence like "the pitfall I fell into"
+   inside `references/` means the experience is not distilled yet.
+
 ## Before you open a PR
 
 - [ ] `BIG_SKIP_NETWORK=1 python -m pytest tests -q` is green
