@@ -105,6 +105,10 @@ description: 从 B站（bilibili）批量视频中为一个议题搜集信息，
 
 **存档（深入模式默认产出三件）**：
 
+> 报告根目录由 `BIG_REPORT_DIR` 决定，默认是项目内的 `分析报告库/`。
+> 想放到项目外（例如用私人仓库跨机同步个人资产），把它指向目标目录即可。
+> 下文所有 `分析报告库/` 都读作"报告根目录"。
+
 | 产物 | 谁写 | 位置 |
 |---|---|---|
 | **markdown 报告** | **Agent 手写**（唯一真源） | `分析报告库/<YYYYMMDD>-深入分析-<议题>/<议题>·B站信息深入报告.md` |
@@ -576,7 +580,7 @@ get_comments(bvid=bv, n=100, detail="opinion")
 15. **简要模式默认不产出 HTML/PDF**；用户明确点名要，就照做，产物仍进
     `分析报告库/<日期>-简要分析-<议题>/`，标题后缀仍是「B站信息简报」。
     不要因为"规范说只出 md"而拒绝用户已经说清的要求。
-15. **产出必须落 `分析报告库/<YYYYMMDD>-<模式>-<议题>/`**，路径由
+15. **产出必须落在报告根目录（默认 `分析报告库/`）下的 `<YYYYMMDD>-<模式>-<议题>/`**，路径由
     `python -m big.cli report-path` 算，**不许手拼**（日期格式、模式措辞、
     议题里的非法字符任一处写错都不会报错，只会让报告散落在两三个目录里）。
     标题后缀：深入 = `B站信息深入报告`，简要 = `B站信息简报`。
@@ -597,7 +601,7 @@ get_comments(bvid=bv, n=100, detail="opinion")
 | `videos.json` | 视频索引：BV × 议题 × 评级 × 关键发现 | 任务结束 | `registry_upsert(kind="video")` |
 | `topics.json` | 议题档案：核心问题 / 已搜方向 / 已覆盖 / 缺口 / 未收敛冲突 / **用户采纳了什么** / 下次从哪切入 | 任务结束 | `registry_upsert(kind="topic")` |
 | `topics/<议题>/protocol.md` | 检索协议（阶段 0 产物落盘） | **阶段 0 结束** | `registry_upsert(kind="protocol")` |
-| `分析报告库/` | 议题报告存档（md / HTML / PDF） | 深入模式默认产出 | 路径用 `big report-path` 算 |
+| 报告根目录（默认 `分析报告库/`，`BIG_REPORT_DIR` 可覆盖） | 议题报告存档（md / HTML / PDF） | 深入模式默认产出 | 路径用 `big report-path` 算 |
 | **`insights.md`** | **跨议题认知：领域 / 信源 / 方法** | **每次任务必写** | `registry_upsert(kind="insight", topic=...)` |
 
 > ⚠️ `.registry/topics/<议题>/` 里**没有报告**，只有 `protocol.md` / `clusters.json` /
@@ -707,6 +711,7 @@ registry_upsert(kind="commit")    # 收尾时一次合并进正式库
 | `references/registry.md` | 信源库 / 视频索引的数据结构与维护 |
 | `references/mcp-tools.md` | ⭐ 14 个 MCP 工具的用法与坑 |
 | `references/opinion-distribution.md` | ⭐ 评论区观点分布：三轴 / 四型 / 偏差声明 |
+| `references/character-portrait-playbook.md` | ⭐ 角色画像：关系位 / 降格动作 / 缺口 / 怪信号判读 |
 | `references/context-isolation.md` | ⭐ 上下文隔离：子代理契约 / 回传模板 / 无子代理降级 / 验收判据 |
 | `references/subtitle-reliability.md` | ⭐ 字幕可靠性：误转模式 / 说话人分离 / 反向核实 / 抽帧判据 |
 | `references/troubleshooting.md` | 故障知识库 |
