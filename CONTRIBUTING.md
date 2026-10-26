@@ -51,6 +51,12 @@ pip install -e ".[images,docs,dev]"
 依赖组：`images` = Pillow（评论区联系表）· `docs` = markdown + playwright（HTML / PDF 渲染）·
 `dev` = pytest。
 
+**用 uv 的话**：`uv sync --extra images --extra docs --extra dev`。
+`uv.lock` 已入库（53 个包，跨 Python 3.10–3.14 与三平台），作用是**保证两台机器装出完全一致的依赖**——
+`pip install` 每次解析到的版本可能不同。改了 `pyproject.toml` 的依赖之后，要跑一次 `uv lock`，
+否则锁文件会静默失真，下次 `uv sync` 才以旧版本生效。
+用 pip 的人不受影响：pip 根本不读 `uv.lock`。
+
 **让 Agent 认这个 skill**（改代码时需要，方法见 [INSTALL.md](INSTALL.md) 第三节）：
 Windows 用 junction，macOS / Linux 用符号链接，指向仓库根目录。
 
@@ -168,6 +174,7 @@ release: vX.Y.Z 正式版
 - [ ] `BIG_SKIP_NETWORK=1 python -m pytest tests -q` 全绿
 - [ ] 新增 / 删除工具 ⇒ **所有文档**里的工具数都同步了
 - [ ] 升版本 ⇒ `pyproject.toml` 与 `big/__init__.py` 都同步了
+- [ ] 改了依赖 ⇒ `uv lock` 已同步（`uv lock --check` 不报 outdated）
 - [ ] 追加了 `references/CHANGELOG.md` 条目
 - [ ] 没提交凭据、`.registry/`、`分析报告库/`、`.bigout/`
 - [ ] 改判据 ⇒ **已经开过 Issue 讨论**（或 PR 里写清了理由）

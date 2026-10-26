@@ -55,6 +55,13 @@ pip install -e ".[images,docs,dev]"
 Extras: `images` = Pillow (comment contact sheets) · `docs` = markdown + playwright
 (HTML/PDF rendering) · `dev` = pytest.
 
+**If you use uv**: `uv sync --extra images --extra docs --extra dev`.
+`uv.lock` is committed (53 packages, covering Python 3.10–3.14 across three platforms); its job is
+to make **two machines install byte-identical dependencies**, whereas `pip install` may resolve
+different versions each time. After changing a dependency in `pyproject.toml`, run `uv lock` —
+otherwise the lockfile drifts silently and the next `uv sync` quietly uses the old versions.
+pip users are unaffected: pip never reads `uv.lock`.
+
 **Point your agent at this skill** (needed when you change code; see
 [INSTALL.md](INSTALL.md) §3): a junction on Windows, a symlink on macOS / Linux, both aimed at
 the repository root.
@@ -182,6 +189,7 @@ Three rules:
 - [ ] `BIG_SKIP_NETWORK=1 python -m pytest tests -q` is green
 - [ ] Adding / removing a tool ⇒ the tool count is updated in **every** document
 - [ ] Bumping the version ⇒ `pyproject.toml` and `big/__init__.py` are both updated
+- [ ] Changed a dependency ⇒ `uv lock` is in sync (`uv lock --check` reports no outdated)
 - [ ] An entry was appended to `references/CHANGELOG.md`
 - [ ] No credentials, `.registry/`, `分析报告库/` or `.bigout/` in the diff
 - [ ] Changing a rubric ⇒ **discussed in an Issue first** (or the PR spells out the reasoning)

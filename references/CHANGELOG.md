@@ -10,6 +10,37 @@
 
 ---
 
+## 2026-10-27 · 未发布 · 批次 N：uv.lock 入库
+
+**类型**：仓库配置 + 文档（**不改代码**）
+
+**触发**：仓库根一直躺着一个未跟踪的 `uv.lock`（316 KiB，锁 53 个包）。
+查下来它的处境是「承诺错位」：`INSTALL.md` 全篇 `pip install -e`、CI（`tests.yml`）也是 pip，
+**项目里没有任何流程消费它**；但它又没被 `.gitignore` 挡住，于是每次 `git status` 都跳出来。
+
+两个选项里选了「入库」：作者的开发要跨两台机器，`uv sync` 能装出逐字节相同的依赖，
+而 `pip install` 每次解析到的版本可能不同。lock 本身是健康的——项目条目版本 `1.0.1`
+与 `pyproject.toml` 一致，`source = { editable = "." }` 是相对路径（不含本机绝对路径），
+`uv lock --check` 通过。
+
+### N1 · `uv.lock` 入库
+
+316 KiB 一次性成本；pip 用户不受影响（pip 根本不读这个文件）。
+
+### N2 · 补两条维护规矩（中英双语）
+
+| 位置 | 加什么 |
+|---|---|
+| 「开发环境」 | `uv sync --extra images --extra docs --extra dev`；说明 lock 已入库、改依赖要 `uv lock` |
+| 「提 PR 之前自查」 | 改了依赖 ⇒ `uv lock --check` 不报 outdated |
+
+**没改的**：CI 仍走 pip。不为一个 lock 引入第二条依赖安装线。
+
+**怎么验证**：`uv lock --check` 输出 `Resolved 53 packages` 且退出码 0；
+`BIG_SKIP_NETWORK=1 python -m pytest tests -q` 全绿（工具数、版本号未动）。
+
+---
+
 ## 2026-10-27 · 未发布 · 批次 L：报告根目录可配置
 
 **类型**：文档（**不改代码，不改任何取数与判断逻辑**）
