@@ -1100,6 +1100,10 @@ def registry_get(kind: str = "stats", mid: int | None = None, bvid: str | None =
             if not topic:
                 return _j({"error": "kind=clusters 需要 topic（议题名）"})
             return _finish(registry.read_clusters(topic))
+        if k == "rejected":
+            if not topic:
+                return _j({"error": "kind=rejected 需要 topic（议题名）"})
+            return _finish(registry.read_rejected(topic))
         if k == "staging":
             return _finish(registry.list_staging())
         return _j({"error": f"未知 kind={kind}"})
@@ -1143,6 +1147,10 @@ def registry_upsert(kind: str, records: list[dict] | None = None,
         也无法判断换个模型会不会归出别的簇。
         落盘位置 `.registry/topics/<议题>/clusters.json`，主键 `(bvid, cluster)`。
         读回：`registry_get(kind="clusters", topic="…")`。
+    kind="rejected"：{bvid, title, grade, reason, stage?}，需要同时给 topic。
+        **报告 §6.3 的淘汰清单必须走这条入库**——只写在报告里，下一轮就排不掉，
+        会把同一批候选重新扫一遍、重新分诊一遍。读回：`registry_get(kind="rejected", topic="…")`，
+        返回里的 `exclude_bvids` 可直接喂给 `scan_topic(exclude_bvids=...)`。
     kind="commit"：**收尾时调用一次**，把暂存区合并进正式库；
         同时自动打 `run-end` 并回传 `final_cost.md_line`（最终单轮开销，此后不变）。
         ⇒ 收尾顺序固定为：commit → 把 final_cost.md_line 贴进报告 §五 → 渲染。
@@ -1196,12 +1204,12 @@ def registry_upsert(kind: str, records: list[dict] | None = None,
             if not topic:
                 return _j({"error": "kind=insight 需要 topic（议题名）"})
             return _finish(registry.stage_insights(topic, records or []))
-        if k in ("source", "video", "topic", "protocol", "cluster"):
+        if k in ("source", "video", "topic", "protocol", "cluster", "rejected"):
             if not records:
                 return _j({"error": f"kind={k} 需要至少一条 records"})
-            if k == "cluster":
+            if k in ("cluster", "rejected"):
                 if not topic:
-                    return _j({"error": "kind=cluster 需要 topic（议题名）"})
+                    return _j({"error": f"kind={k} 需要 topic（议题名）"})
                 records = [{**r, "topic": r.get("topic") or topic} for r in records]
             out = []
             for rec in records:
@@ -1211,7 +1219,8 @@ def registry_upsert(kind: str, records: list[dict] | None = None,
                     out.append({"input": rec, "error": f"{type(e).__name__}: {e}"})
             return _finish(out)
         return _j({"error": 'kind 必须是 "source" / "video" / "insight" / "topic" / '
-                            '"protocol" / "cluster" / "run-start" / "commit" / "discard"'})
+                            '"protocol" / "cluster" / "rejected" / "run-start" / '
+                            '"commit" / "discard"'})
     except Exception as e:                                    # noqa: BLE001
         return _err(e)
 

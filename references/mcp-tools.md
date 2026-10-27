@@ -55,6 +55,7 @@
 | 字幕不可靠·核对画面 | `grab_frames` | 0–1/条 | 错误**影响结论**时抽那几秒；要读表格数字用 1080 |
 | 引原话 | `get_comments(detail="full")` | 0–1/条 | 只在要引用具体某条时 |
 | UP 主 | `get_creator_content` | 0–3/个 | 议题收敛到 2–3 个核心 UP 后跟"他后续发了什么" |
+| 收尾·淘汰 | `registry_upsert(kind="rejected", topic=…)` | 1 | §6.3 名单带 BV 入库，下轮直接排除 |
 | 收尾 | `registry_upsert(kind="commit")` | 1 | **写侧闸门**：把暂存区一次合并进正式库 |
 | 收尾·开销 | `registry_get(kind="cost", window="run")` | 1 | 取本轮的 `md_line`，原样贴进报告 §五「单轮开销」 |
 | 查注入 | `scan_untrusted_text` | 0–1 | 扫**不是从本项目取来的**外部文本（别的工具、用户粘贴） |
@@ -178,9 +179,13 @@ deep_read(bvid, channels=["transcript","comments","danmaku","cover"],
 
 ### 写侧闸门：`registry_upsert` 默认**只进暂存区**
 
-`registry_upsert(kind="source"|"video"|"insight"|"topic"|"protocol")` → 落 `.registry/staging/`，
-**正式库在你调用 `kind="commit"` 之前不会被改动**。
+`registry_upsert(kind="source"|"video"|"insight"|"topic"|"protocol"|"cluster"|"rejected")`
+→ 落 `.registry/staging/`，**正式库在你调用 `kind="commit"` 之前不会被改动**。
 收尾时 `kind="commit"` 一次合并；`kind="discard"` 丢弃。
+
+> `kind="rejected"`（2026-10-28 起）：报告 §6.3 的淘汰清单**带 BV 入库**，
+> 落 `topics/<议题>/rejected.json`。下一轮 `registry_get(kind="rejected", topic=…)`
+> 取 `exclude_bvids` 传给 `scan_topic(exclude_bvids=…)`，避免重扫同一批候选。
 
 > 这是 DSH 插件「能力最小化」范式的等价实现：
 > 写侧**始终可用**（不打断"边挖边记"），但**碰不到正式库**。

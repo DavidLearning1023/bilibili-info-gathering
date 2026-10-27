@@ -45,13 +45,20 @@ EXPECTED_TOOLS = (
 # 让 MCP 进程的工作目录与安装位置无关。MCode / WorkBuddy / Claude Code 的
 # stdio server 未必带 cwd 参数（客户端配置层通常只有 command/args/env），
 # 而 big.media.OUT_ROOT 的默认值依赖 cwd —— 不钉死就会把图片写到随机目录。
+#
+# 2026-10-28 修：这里**不再**钉 BIG_REGISTRY_DIR。以前把它硬编码成 ROOT/.registry，
+# 结果是"自检永远只看项目里那份旧库"——用户配了 BIG_REGISTRY_DIR 指向外部资产库，
+# 自检还报"锚定在项目内 [OK]"，并拿旧库的条数当结论。
+# 图片目录必须钉（那是 cwd 无关性）；两个库目录要**尊重配置**。
 PINNING_ENV = {
     "BIG_OUT_DIR": str(ROOT / ".bigout"),
-    "BIG_REGISTRY_DIR": str(ROOT / ".registry"),
     "PYTHONPATH": str(ROOT / "src"),
     "PYTHONIOENCODING": "utf-8",
     "PYTHONUNBUFFERED": "1",
 }
+
+# 允许透传给 MCP 子进程的"库位置"变量：设了就用用户的，没设就用模块默认。
+PASSTHROUGH_ENV = ("BIG_REGISTRY_DIR", "BIG_REPORT_DIR")
 
 
 # ------------------------------------------------------------------ 输出底座
@@ -245,9 +252,26 @@ def check_paths() -> None:
             inside = str(p).lower().startswith(str(ROOT).lower())
         if inside:
             record("OK", f"{label}锚定在项目内：{p}")
+        elif label == "资产库目录" and os.environ.get("BIG_REGISTRY_DIR"):
+            # 外部资产库是**支持**的用法（跨机同步、放私人仓库），不是配置错误。
+            # 但要把它打印出来——读错库不会报错，只会让结论建立在旧数据上。
+            record("OK", f"资产库在项目外（BIG_REGISTRY_DIR 生效）：{p}")
         else:
             record("FAIL", f"{label}跑到了项目外：{p}",
-                   "MCP 配置里必须设 BIG_OUT_DIR / BIG_REGISTRY_DIR，否则换个 cwd 就写到别处")
+                   "MCP 配置里必须设 BIG_OUT_DIR，否则换个 cwd 就写到别处")
+
+    # 双库并存：项目里留着一份旧的 .registry，与环境变量指向的那份并存。
+    # 2026-10-27 实测：项目内 71 条视频、外部 232 条，自检过去一直只报前者。
+    project_reg = ROOT / ".registry"
+    if os.environ.get("BIG_REGISTRY_DIR") and project_reg.exists():
+        try:
+            same = project_reg.resolve() == reg_dir.resolve()
+        except OSError:
+            same = False
+        if not same:
+            record("WARN", f"检测到两个资产库：{project_reg}（项目内）与 {reg_dir}（生效）",
+                   "读错库不会报错，只会让结论建立在旧数据上。确认用哪一份，"
+                   "把另一份改名或归档（改名前先确认它确实是旧的）")
 
 
 async def _mcp_probe(net: bool) -> tuple[list[str], dict, dict]:
@@ -259,10 +283,15 @@ async def _mcp_probe(net: bool) -> tuple[list[str], dict, dict]:
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
+    env = dict(PINNING_ENV)
+    for k in PASSTHROUGH_ENV:                     # 用户配的库位置要透传，否则测的是默认库
+        if os.environ.get(k):
+            env[k] = os.environ[k]
+
     params = StdioServerParameters(
         command=sys.executable,
         args=["-m", "big.mcp_server"],
-        env=dict(PINNING_ENV),
+        env=env,
         cwd=tempfile.gettempdir(),
     )
     async with stdio_client(params) as (r, w):
@@ -319,7 +348,15 @@ def check_mcp(net: bool) -> None:
 
 def check_registry() -> None:
     section("4/5 资产库与报告库")
-    reg = ROOT / ".registry"
+    # 用**真实生效**的路径，而不是 ROOT/.registry —— 否则配了外部资产库的用户
+    # 会看到一份自己没在用的库的统计，而且一切"看着都正常"。
+    sys.path.insert(0, str(ROOT / "src"))
+    try:
+        from big import registry as _registry
+        reg = pathlib.Path(_registry.ROOT)
+    except Exception:                                         # noqa: BLE001
+        env_reg = os.environ.get("BIG_REGISTRY_DIR")
+        reg = pathlib.Path(env_reg) if env_reg else (ROOT / ".registry")
     if not reg.exists():
         record("WARN", f"资产库目录不存在：{reg}",
                "首次写入时自动创建；也可执行 big registry init")
@@ -363,14 +400,19 @@ def check_credentials() -> None:
         return
     cookie = load_cookie()
     if cookie:
-        record("OK", "已配置登录态（取字幕可用）")
+        # 只证明"文件在 / 变量在"，**不证明 cookie 没过期**。
+        # 不要把这里写成"取字幕可用"——过期 cookie 同样会走到这一支，
+        # 表现出来却是 get_transcript 返回空，进而被误判成"该视频没字幕"。
+        record("OK", "已找到登录态（仅证明存在，未验证是否过期）",
+               "验证：python -m big.cli video <有字幕的BV> --head 0.05，"
+               "能打印字幕行即有效；打印 [WARN] 无字幕而网页明明有 = 已过期")
     else:
         record("WARN", "未配置登录态：取字幕不可用",
                "元数据 / 评论 / 弹幕 / 搜索不受影响。"
-               "配置：把 SESSDATA 写进 ~/.bilibili-mcp/config.json"
-               "（{\"sessdata\": \"...\"}）")
-    out("         注：MCP 进程不会继承环境变量 BILI_SESSDATA，"
-        "所以必须用上面的配置文件方式")
+               "配置优先用扫码向导：npx -y @xzxzzx/bilibili-mcp@1.14.1 setup；"
+               "或把 SESSDATA 写进 ~/.bilibili-mcp/config.json（{\"sessdata\": \"...\"}）")
+    out("         注：MCP 子进程不会继承 shell 里的 BILI_SESSDATA，"
+        "所以别指望 export 一下就行——用配置文件，或写进 mcp.json 的 env")
 
 
 # ------------------------------------------------------------------ 入口

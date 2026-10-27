@@ -20,14 +20,46 @@ from . import registry, reports
 from .comments import comment_stats, get_comments
 from .danmaku import analyze as analyze_danmaku
 from .danmaku import fetch_xml, parse as parse_danmaku
-from .http import load_cookie, parse_bvid
+from .http import call_count, load_cookie, parse_bvid
 from .media import OUT_ROOT, contact_sheet
 from .search import scan_topic
 from .video import fmt_ts, get_info, get_transcript
 
+# stdout 累计字数：CLI 的"输出侧体积"没有 payload 可量，用它当代理指标。
+_OUT_CHARS = [0]
+
 
 def _w(s: str = "") -> None:
+    _OUT_CHARS[0] += len(s)
     print(s)
+
+
+def _log_cli_cost(cmd: str, calls_before: int) -> None:
+    """CLI 直调也要记一笔账（2026-10-28 补）。
+
+    以前只有 MCP 的 `_finish` 会写 `cost-log.jsonl`，走 CLI / 库直调的轮次**账本 0 行**：
+    2026-10-27 那轮就是这么来的，报告 §五 只能写"约 85–90 次上游（手数）"。
+
+    口径：`calls` = 进程内 `http.call_count()` 的差值（真的打了几次上游）；
+    `est_output_tokens` = stdout 字数 × 0.7（CJK 口径，仅作横向比较）。
+    `comment_rows` / `transcript_chars` 在 CLI 层拿不到，记 0——**已知会低估**，
+    但 calls 是准的，而 calls 才是"这一轮花了多少"的主项。
+
+    失败必须静默：记账不该让一条已经跑完的命令以非零退出。
+    """
+    try:
+        calls = call_count() - calls_before
+        chars = _OUT_CHARS[0]
+        if calls <= 0 and chars <= 0:
+            return
+        registry.append_cost(f"cli:{cmd}", {
+            "calls": calls,
+            "comment_rows": 0,
+            "transcript_chars": 0,
+            "est_output_tokens": int(chars * 0.7),
+        })
+    except Exception:                                     # noqa: BLE001
+        pass
 
 
 def cmd_scan(a) -> None:
@@ -309,7 +341,12 @@ def main() -> None:
     p.set_defaults(func=cmd_setup)
 
     a = ap.parse_args()
-    a.func(a)
+    calls_before = call_count()
+    _OUT_CHARS[0] = 0
+    try:
+        a.func(a)
+    finally:
+        _log_cli_cost(a.cmd, calls_before)
 
 
 if __name__ == "__main__":

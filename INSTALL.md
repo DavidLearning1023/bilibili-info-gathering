@@ -37,8 +37,10 @@
 |---|---|---|
 | Agent 客户端 | 支持 `SKILL.md` 规范 **且** 支持 stdio MCP | MiniMax Code / WorkBuddy / Claude Code 等（按通用规范编写，不绑定客户端） |
 | Python | **3.10+** | 取数核心只用标准库（`urllib`）；MCP SDK 与 Pillow 才需要 pip 装 |
-| B站账号 | 可选 | **仅取字幕**时需要（手机 App 扫码登录拿 SESSDATA） |
+| **Node.js** | **≥ 20，可选** | **仅当**要用上游 `@xzxzzx/bilibili-mcp` 或它的**扫码登录向导**时需要（npx 启动）。本仓库自己的 MCP 不需要 Node |
+| B站账号 | 可选 | **仅取字幕**时需要。拿登录态有两条路，**优先用扫码向导**（见 2.4） |
 | Pillow | 可选 | **仅**「评论区图片联系表」需要（`get_comment_images`） |
+| markdown / playwright | 可选 | **仅** HTML / PDF 渲染需要。**L2/L3 默认产出这两样**，不装就只出 md（见 2.7） |
 
 > 不装 Pillow 也能用：14 个工具里只有 `get_comment_images` 受影响。
 
@@ -58,9 +60,10 @@ git clone https://github.com/DavidLearning1023/bilibili-info-gathering.git \
   <skills 目录>/bilibili-info-gathering
 ```
 
-> ⚠️ **现状（2026-10-21）**：本仓库**尚未公开到 GitHub**，`git clone` 这条路暂时走不通。
-> 现阶段装本体用**方式二**（把整个文件夹放进 skills 目录），或者更好：用 **junction 直连**
-> 项目所在目录（见 §3.2）——不用复制，改动也零漂移。
+> ✅ **现状（2026-10-28）**：本仓库**已公开**在
+> `https://github.com/DavidLearning1023/bilibili-info-gathering`，`git clone` 可用。
+> 也可以把整个文件夹放进 skills 目录，或者用 **junction 直连**项目所在目录（见 §3.2）——
+> 不用复制，改动也零漂移。
 
 **方式二：下载 zip**，解压后把整个文件夹放进同样的位置。
 
@@ -96,7 +99,13 @@ python scripts/install_mcp.py --client minimax   # 只装 MiniMax Code
 python scripts/install_mcp.py --client all       # 装所有检测到的客户端
 python scripts/install_mcp.py --print            # 只打印配置 JSON，自己手动贴
 python scripts/install_mcp.py --check            # 只看现状，不改任何文件
+python scripts/install_mcp.py --with-docs         # 连 HTML/PDF 渲染依赖一起装（推荐）
 ```
+
+> ⚠️ **默认只装 `.[images]`（Pillow），不装 `.[docs]`（markdown / playwright）。**
+> 而**L2 是默认档，默认产出 md + HTML + PDF**（见 2.3）。
+> 所以一条命令装全更省事：`python scripts/install_mcp.py --with-docs`。
+> 不加这个参数也能用，只是产物只有 md——**这不是故障，是没装渲染依赖**。
 
 > **不想用脚本？** `--print` 会打出下面这段 JSON，手动贴进 MCP 配置即可：
 >
@@ -133,31 +142,81 @@ B站上关于「普通人如何投资」有什么
 
 3. Agent 会先查资产库、再广扫、再定向深挖，最后给你**信源地图 + 结论**。
 
-**两种模式用措辞切换**（详见 README「两种用法」）：
+**力度用措辞切换，复杂议题会自动加码**（详见 README「三档力度」与 `references/analysis-depth.md`）：
 
 ```
-B站上关于「普通人如何投资」有什么          → 深入：10–20 分钟，md + HTML + PDF
-帮我简要了解一下 B站上「普通人如何投资」    → 简要：3–5 分钟，只出 md
+B站上关于「普通人如何投资」有什么              → L2 深挖：10–20 分钟，md + HTML + PDF
+帮我简要了解一下 B站上「普通人如何投资」        → L1 速览：3–5 分钟，只出 md
+B站上「哪个角色人气最高」/ 议题含 8 个以上可比对象 → L3 攻坚：25–45 分钟，先做矩阵再给结论
 ```
 
-> 不需要回答"你要哪一种"——**措辞就是答案**。想切换随时重说一句即可。
+> 不需要回答"你要哪一档"——**措辞定基础档，复杂度决定要不要升 L3**。想切换随时重说一句即可。
+> L3 只会在**议题本身复杂**（主体多、要排序、词族已封顶、上一轮留了结构性缺口）时自动触发，
+> 不会因为"你多问了一句"就烧掉半小时。
+
+> ⚠️ **L2/L3 的 HTML/PDF 依赖 `.[docs]`**：没装 markdown → 只出 md（脚本会报错提示）；
+> 没装 playwright 或没跑 `playwright install` → HTML 照出、PDF 跳过。
+> 装全的方法就是 `--with-docs`（§2.2）或 §2.7 那两条命令。
+> **这不是"文档说错了"**：产物依赖是分层的，这里写清楚比藏起来好。
+
+> 💡 **首轮建议先跑一次 L1 速览**（3–5 分钟、只出 md）。
+> 它能验证"MCP 通了、搜索通了、报告能落盘"这三件事——比直接跑 20 分钟的 L2 更容易定位问题。
 
 ### 2.4 可选：取字幕需要登录态
 
 只有**取字幕**（`get_transcript`）需要登录。元数据、评论、弹幕、搜索**都不需要**。
 
-把 SESSDATA 写进 `~/.bilibili-mcp/config.json`：
+**三条路，按难度从低到高——请从 A 开始。**
+
+| 路 | 做法 | 前置 |
+|---|---|---|
+| **A. 扫码向导（推荐）** | 一条命令，手机扫码，自动写好凭据文件 | Node.js ≥ 20 |
+| B. F12 手抄 SESSDATA | 写 JSON 文件 | 会用浏览器开发者工具 |
+| C. 环境变量 | 只适合 CLI 调试 | — |
+
+**A. 扫码向导（30 秒）**
+
+```bash
+npx -y @xzxzzx/bilibili-mcp@1.14.1 setup     # Windows PowerShell 用 npx.cmd
+```
+
+菜单里选**扫码登录** → 用 B站手机 App 扫码确认 → 问是否安装 ASR 模型时**选否**（默认即可）。
+完成后凭据写在 `~/.bilibili-mcp/config.json`（正常是 `C:\Users\<你>\.bilibili-mcp\config.json`）。
+
+> 这个向导来自上游 `@xzxzzx/bilibili-mcp`，**本仓库复用它写出的凭据文件**——
+> 因为两个 MCP 读的是同一个 `~/.bilibili-mcp/config.json`。
+> 装一次，两边都能取字幕。
+
+**B. F12 手抄（A 走不通时）**
+
+1. 浏览器登录 B站 → F12 → Network → 任意请求的 Cookie 里找 `SESSDATA`；
+2. **目录不存在就先建**：`mkdir -p ~/.bilibili-mcp`（Windows：`mkdir %USERPROFILE%\.bilibili-mcp`）；
+3. 写入：
 
 ```json
 { "sessdata": "你的 SESSDATA 值" }
 ```
 
-怎么拿：浏览器登录 B站 → F12 → Network → 任意请求的 Cookie 里找 `SESSDATA`。
+**C. 环境变量**：`BILI_SESSDATA`。CLI 在终端里跑时有效；
+MCP 场景下**不会**被继承（客户端只透传白名单变量），除非你写进 `mcp.json` 的 `env` 里——
+那等于把凭据存进配置文件，不如用 A/B。
 
-> ⚠️ **不要用环境变量 `BILI_SESSDATA` 配 MCP**。MCP 客户端启动子进程时只透传
-> 一小部分环境变量（`PATH` / `USERPROFILE` / `SYSTEMROOT` 等白名单），
-> `BILI_SESSDATA` **不会**被继承。**必须用上面的配置文件方式。**
-> （CLI 直接在终端跑时环境变量是有效的，但 MCP 场景不行。）
+**怎么验证真的登录成功了**（不要只看自检，自检只查文件在不在）：
+
+```bash
+python -m big.cli video BV1jhn16GEcv --head 0.05
+```
+
+- 打印出字幕行、且标题后缀写着 `（ai_subtitle）` 或 `（cc）` → **通了**
+- 打印 `[WARN] 无字幕`，而这条视频在网页上明明有字幕 → **登录态失效或没被读到**
+
+> ⚠️ **过期最坑的地方：它伪装成"这条视频没字幕"。**
+> 登录态失效后 `get_transcript` 返回空，流程会把该视频记成"无字幕"，
+> 于是报告 §五 的缺口声明写「该视频无可用字幕」——**读者会以为视频真没字幕**。
+> 所以：**一条议题里出现 2 条以上"无字幕"，先验登录态，再下结论。**
+
+> 🔒 凭据是**账号级**的，别提交进 git、别贴进 issue。`~/.bilibili-mcp/` 在用户目录下，
+> 不在仓库里，默认不会被提交。
 
 ### 2.5 更新
 
@@ -166,12 +225,10 @@ cd <skills 目录>/bilibili-info-gathering
 git pull          # zip 用户：重新下载并覆盖
 ```
 
-> 更新后**重启客户端**。
+> 更新后**重启客户端**（MCP 子进程不热加载，改了 `src/big/` 下的代码也一样）。
 >
-> ⚠️ **本项目目录当前不是 git 仓库**（无 `.git`），所以 `git pull` 不适用。
-> 用 junction 直连的用户**根本不需要"更新"这一步**——链接指向的就是你正在开发的那个目录，
-> 改完跑一次 `python scripts/check_setup.py` 即可；但 **MCP 子进程不热加载**，
-> 改的是 `src/big/` 下的代码时，仍须重启客户端才会生效。
+> 💡 **用 junction 直连的用户**不需要"更新"这一步——链接指向的就是你正在开发的那个目录。
+> 改完跑一次 `python scripts/check_setup.py`，再重启客户端即可。
 
 ### 2.6 可选：本地 ASR（视频没有字幕时的第三条路）
 
@@ -223,9 +280,9 @@ cp scripts/asr_transcribe.py ~/.local/asr/
 
 ---
 
-### 2.7 可选：报告的 HTML / PDF（深入模式默认，简要模式按需）
+### 2.7 可选：报告的 HTML / PDF（L2/L3 默认，L1 按需）
 
-**简要模式默认只出 md**；只有你明确要 HTML/PDF 时才需要这一节。
+**L1 默认只出 md**；只有你明确要 HTML/PDF（或跑 L2/L3）时才需要这一节。
 
 ```bash
 cd <skills 目录>/bilibili-info-gathering
@@ -337,7 +394,7 @@ python scripts/install_mcp.py --client all   # 装依赖 + 注册 MCP
 
 ---
 
-## 四、配置详解：`env` 里那五个变量
+## 四、配置详解：`env` 里那六个变量
 
 它们不是可选项，少一个就会出**静默**问题：
 
@@ -345,12 +402,17 @@ python scripts/install_mcp.py --client all   # 装依赖 + 注册 MCP
 |---|---|
 | `BIG_OUT_DIR` | 图片联系表写到 **cwd 里的 `.bigout`**。MCP 客户端启动子进程时**未必带 cwd**（配置层通常只有 `command`/`args`/`env`），cwd 一变，文件就散到别处去了 |
 | `BIG_REGISTRY_DIR` | 资产库同理。`registry.py` 本来用 `__file__` 推项目根（不受 cwd 影响），但显式设置更保险，换目录也方便 |
+| `BIG_REPORT_DIR` | 报告落在**项目内**的 `分析报告库/`。想把报告放到另一块盘（或私人仓库做跨机同步）就指这里；不设等于"跟代码放一起" |
 | `PYTHONPATH` | editable 安装坏掉时仍能 `import big` |
 | `PYTHONIOENCODING=utf-8` | MCP 客户端按 UTF-8 解码；Windows 下 stdout 走管道时用系统 ANSI 代码页(GBK)，不设会乱码，碰上生僻字符还会抛 `UnicodeEncodeError` **让 server 静默死掉** |
 | `PYTHONUNBUFFERED=1` | stdout 被管道接走时是块缓冲，不设会延迟响应，表现为工具调用"卡住不动" |
 
-> 这五条是**实测踩出来的**，不是防御性编程。
+> 这几条是**实测踩出来的**，不是防御性编程。
 > `scripts/check_setup.py` 里有一项专门验证「换一个完全无关的 cwd 启动，目录仍然落在项目内」。
+>
+> ⚠️ **`BIG_REGISTRY_DIR` / `BIG_REPORT_DIR` 指向项目外时，会出现"两个库"**：
+> 项目里留着一份旧的 `.registry/`，你实际在用另一份。任何一方读错都不会报错。
+> `check_setup.py` 现在会显式打印**真实生效路径**，并在检测到双库时告警——**看那一行路径，别只看 OK**。
 
 ---
 
@@ -365,10 +427,10 @@ python scripts/check_setup.py
 | 项 | 检查什么 |
 |---|---|
 | 1 依赖 | Python / mcp / Pillow / `big` 包是否指向本仓库 |
-| 2 目录锚定 | 换个无关 cwd 启动，图片与资产库是否仍落在项目内 |
+| 2 目录锚定 | 换个无关 cwd 启动，图片是否仍在项目内、资产库是否落在**配置的位置** |
 | 3 MCP 握手 | initialize → tools/list（应正好 14 个）→ tools/call（含一次真实联网搜索） |
-| 4 资产库 | 信源库 / 视频索引 / 经验库是否就位 |
-| 5 凭据 | 登录态是否配置（只影响取字幕） |
+| 4 资产库 | **真实生效的**资产库路径 + 信源库 / 视频索引 / 经验库是否就位 |
+| 5 凭据 | 登录态**文件**是否存在（**不验证是否过期**） |
 
 输出解读：
 
@@ -377,11 +439,22 @@ python scripts/check_setup.py
 | 全 `[OK]` | 就绪 | 直接开始用 |
 | `[FAIL] 缺少工具` | server 起来了但工具不全 | 跑 `python tests/test_mcp_smoke.py` 看详情 |
 | `[FAIL] MCP 握手失败` | server 起不来 | 手动 `python -m big.mcp_server` 看报错 |
-| `[FAIL] 目录跑到了项目外` | `env` 没配全 | 回到第四节 |
+| `[FAIL] 目录跑到了项目外` | 图片输出目录没配 | 回到第四节 |
+| `[WARN] 检测到两个资产库` | 项目内 `.registry/` 与 `BIG_REGISTRY_DIR` 并存 | 确认你要用哪一份；把不用的那份改名或删掉（先确认它确实是旧的） |
 | `[WARN] 未配置登录态` | 只影响取字幕 | 见 2.4 |
 | `[WARN] 缺少 Pillow` | 只影响图片联系表 | `pip install -e ".[images]"` |
 
 退出码：`0` = 没有 FAIL；`1` = 有 FAIL。
+
+> ⚠️ **"17 项全过"能证明什么、不能证明什么**（2026-10-27 的真实教训）：
+>
+> | 能证明 | 不能证明 |
+> |---|---|
+> | 依赖齐、MCP 能起来、14 个工具在 | **客户端有没有把工具装进你的会话**（那是客户端侧状态，脚本看不见） |
+> | B站接口通（一次真实搜索） | **登录态有没有过期**（只查文件在不在） |
+> | 目录可写、路径算得出来 | **它检的是不是你在用的那个库**（看第 4 项那行路径） |
+>
+> 所以读结果的第一动作不是看绿色，是**看那两行路径对不对**。
 
 > 脚本**不会**因为输出编码问题而误报失败——这是 Windows 管道下的真实坑，
 > 脚本内部已做防护（管道下强制 UTF-8）。
@@ -407,17 +480,49 @@ python scripts/check_setup.py
 
 | 症状 | 大概率原因 | 处理 |
 |---|---|---|
-| 客户端里看不到工具 | MCP server 没被 Trust，或没重启客户端 | 信任该 server；重启客户端 |
+| 客户端里看不到工具 | 连接器未启用 / 没被 Trust / 没重启客户端 | 见下面「三段式诊断」 |
+| **改过 `mcp.json` 之后工具消失**（改 env、改路径、改名都算） | 客户端把配置变更当成新的 server，旧的信任不自动继承 | 连接器管理页重新确认一次，再重启客户端 |
+| `npx` 报错 / 上游 MCP 起不来 | 没装 Node.js ≥ 20 | 装 Node，或改用 B 路手抄 SESSDATA（2.4） |
+| L2/L3 跑完只有 md | 没装 `.[docs]` | `python scripts/install_mcp.py --with-docs`（2.2） |
 | 工具调用报 `ModuleNotFoundError: big` | editable 安装失效 | `pip install -e ".[images]"` |
 | 工具调用卡住不动 | stdout 缓冲 | 确认 `PYTHONUNBUFFERED=1` 在 |
 | 输出乱码 / server 静默死 | 编码 | 确认 `PYTHONIOENCODING=utf-8` 在 |
 | 图片散落在奇怪目录 | `BIG_OUT_DIR` 没设 | 回到第四节 |
-| 拿不到字幕但其它功能正常 | 没登录 / 登录态失效 | 见 2.4；`check_setup.py` 会报 |
+| 报告写到"旧目录"/找不到刚生成的东西 | `BIG_REPORT_DIR` 与实际读的库不一致 | 跑 `check_setup.py` 看第 4 项那行真实路径 |
+| 拿不到字幕但其它功能正常 | 没登录 / 登录态失效 | 见 2.4；**先按 2.4 验证，再记"无字幕"** |
 | HTTP 412 | IP 级风控 | 降频（`BIG_RATE_LIMIT_MS`）或等几分钟；换 cookie 没用 |
-| 搜出来的结果大量跑题 | 关键词族没覆盖全 | 见 `references/search-protocol.md` |
+| 搜出来的结果大量跑题 | 关键词族没覆盖全 | 见 `references/keyword-recipes.md`（裸词配方）与 `search-protocol.md` |
 | `transcribe_audio` 报 `metadata_errors` | PyAV 升到了 19 | `pip install "av<19"`（见 2.6） |
 | `transcribe_audio` 报 `cublas64_12.dll not found` | 环境缺 nvidia CUDA 运行库 | 装 `nvidia-cublas-cu12`；或用 `BIG_ASR_CMD` 指向能用的解释器 |
 | `transcribe_audio` 报「BIG_ASR_CMD 指向的命令不存在」 | 路径带引号/带空格 | v1.0.0 起已能正确解析；旧版请升级，或把路径改成不带空格 |
+
+### 三段式诊断：客户端里看不到工具
+
+**不要一上来就重装。** 按顺序走，每步都能把范围缩小一半：
+
+**① 看客户端的状态** —— 连接器管理页找到 `bilibili-info-gathering`：
+被关掉就打开；显示"未信任 / 需重新授权"就点一次信任；然后**重启客户端**（stdio 子进程不热加载）。
+
+**② 证明服务器本身是好的**（30 秒，不依赖客户端）：
+
+```bash
+python scripts/probe_mcp.py
+```
+
+它会读出你客户端配置里的那条命令、带上同一份 `env`、真起一个 stdio server，
+然后打印「握手成功（1.0s）｜工具 14 个」。
+
+| 结果 | 说明 |
+|---|---|
+| 拿到 14 个工具 | **服务器、venv、代码全没问题** ⇒ 问题在客户端侧，回到 ①，别改代码 |
+| 起不来 / 缺工具 | 这才是服务器侧的问题 ⇒ 看它打印的 stderr，或跑 `check_setup.py` |
+
+**③ 仍然看不到工具时**：可以用 CLI 代替（`python -m big.cli scan/video`），
+但**必须在报告里声明"本轮走 CLI，未进调用账本，上游次数为手数"**——
+否则这一轮的开销就永久丢失了（`references/context-isolation.md` §5.1）。
+
+> ⛔ **不要写一次性脚本丢在临时目录里硬跑。** 那等于这一轮的取数逻辑进了黑洞：
+> 报告里没有、下次复现不了、账本也记不到。
 
 更细的排障见 `references/troubleshooting.md`。
 

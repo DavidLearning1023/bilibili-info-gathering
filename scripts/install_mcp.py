@@ -3,6 +3,7 @@
 """bilibili-info-gathering 一键安装：建环境 + 装依赖 + 注册 MCP。
 
     python scripts/install_mcp.py                 # 自动检测客户端，装好并注册
+    python scripts/install_mcp.py --with-docs     # 连 HTML/PDF 渲染依赖一起装（推荐）
     python scripts/install_mcp.py --client minimax  # 指定客户端
     python scripts/install_mcp.py --client all      # 全部已检测到的客户端
     python scripts/install_mcp.py --print           # 只打印配置 JSON，不动任何文件
@@ -195,12 +196,13 @@ def ensure_venv() -> pathlib.Path | None:
     return py
 
 
-def install_deps(py: pathlib.Path) -> bool:
-    step("安装依赖（pip install -e \".[images]\"）")
+def install_deps(py: pathlib.Path, with_docs: bool = False) -> bool:
+    extras = "images,docs" if with_docs else "images"
+    step(f"安装依赖（pip install -e \".[{extras}]\"）")
     env = dict(os.environ)
     env["PYTHONIOENCODING"] = "utf-8"
     try:
-        r = subprocess.run([str(py), "-m", "pip", "install", "-e", ".[images]"],
+        r = subprocess.run([str(py), "-m", "pip", "install", "-e", f".[{extras}]"],
                            cwd=str(ROOT), env=env, capture_output=True, encoding="utf-8", errors="replace",
                            timeout=900)
     except (OSError, subprocess.SubprocessError) as e:
@@ -210,6 +212,10 @@ def install_deps(py: pathlib.Path) -> bool:
         fail(f"安装依赖失败：{(r.stderr or r.stdout or '').strip()[-400:]}")
         return False
     ok("依赖安装完成")
+    if not with_docs:
+        out("     -> 未装 HTML/PDF 渲染依赖（markdown / playwright）。")
+        out("        深入模式默认产出 md+HTML+PDF；要出全套请重跑：")
+        out("        python scripts/install_mcp.py --with-docs")
     return True
 
 
@@ -359,6 +365,9 @@ def main() -> int:
     ap.add_argument("--link-skill", action="store_true",
                     help="顺便把本目录做成 skills 目录的链接")
     ap.add_argument("--skip-venv", action="store_true", help="跳过建 venv 和装依赖")
+    ap.add_argument("--with-docs", action="store_true",
+                    help="连 HTML/PDF 渲染依赖一起装（markdown / playwright）；"
+                         "深入模式默认产出 HTML+PDF，不加这个就只有 md")
     args = ap.parse_args()
 
     if args.print_only:
@@ -392,7 +401,7 @@ def main() -> int:
             out("")
             out("环境准备失败，已中止。")
             return 1
-        if not install_deps(py):
+        if not install_deps(py, with_docs=args.with_docs):
             out("")
             out("依赖安装失败，已中止（未改动任何客户端配置）。")
             return 1

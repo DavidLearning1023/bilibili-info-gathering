@@ -39,7 +39,7 @@ COST_LOG = ROOT / "cost-log.jsonl"
 SOURCE_FIELDS = {"mid", "name", "domains", "grade", "grade_basis",
                  "first_seen", "last_updated", "observations", "conflicts", "notes"}
 VIDEO_FIELDS = {"bvid", "title", "mid", "analyzed_at", "topics", "grade", "redundancy",
-                "key_findings", "transcript_pulled", "verdict",
+                "redundancy_raw", "key_findings", "transcript_pulled", "verdict",
                 # 批次 B4 新增：让"为什么这条被选进来"在半年后仍可查
                 "selected_because", "cross_checked_with", "degraded",
                 # 批次 G 新增：同一 BV 被第二次评级时留痕（见 upsert_video 注释）
@@ -96,6 +96,21 @@ CLUSTER_FIELDS = {"topic", "bvid", "cluster", "stance", "member_rpids",
 CLUSTER_SHAPES = {"topic": str, "bvid": str, "cluster": str, "stance": str,
                   "member_rpids": list, "evidence": list, "axis": dict,
                   "note": str, "created": str}
+
+# ---------------- 淘汰记录（kind="rejected"，2026-10-28） ----------------
+#
+# 为什么单独存，不塞进 videos
+# ------------------------
+# 报告 §6.3 的「淘汰清单」一直是**纯文本**（标题 + 评级 + 理由，没有 BV 号），
+# 于是它只是给人看的附录：2026-10-28 盘点，20 份报告里出现过的 745 个 BV 中
+# 有 **516 个只活在淘汰清单里**，没有一个进库。后果是同一议题第二轮
+# `exclude_topic` 排不掉它们，得把同样的候选再扫一遍、再分诊一遍。
+#
+# 塞进 `videos.json` 也不行：那是"已分析"的索引（232 条），
+# 混进 500 条"看过但淘汰"会把 stats 和比例全冲掉。所以按议题单独一份。
+REJECTED_FIELDS = {"topic", "bvid", "title", "grade", "reason", "stage", "date"}
+REJECTED_SHAPES = {"topic": str, "bvid": str, "title": str, "grade": str,
+                   "reason": str, "stage": str, "date": str}
 
 # ---------------------------------------------------------------- 值的形状契约
 #
@@ -201,6 +216,26 @@ def _unwrap_item(v):
     if isinstance(v, list):
         return [_unwrap_item(x) for x in v]
     return v
+
+
+# 冗余度的同义写法：只收敛**完全同义**的三组后缀。
+# 实测 232 条里有 10 种写法（原创 / 原创源 / 冗余（同方案派）/ 原创·冲突源 …），
+# 统计"原创源占比"得写正则。复合值（`原创·冲突源`）**不动**——
+# 它携带"既是原创又是冲突源"，强行归一等于丢信息。
+_REDUNDANCY_ALIASES = {"原创": "原创", "原创源": "原创",
+                       "冗余": "冗余", "冗余源": "冗余",
+                       "冲突": "冲突", "冲突源": "冲突"}
+
+
+def _canonical_redundancy(rec: dict) -> dict:
+    """把冗余度的同义写法收敛成规范值，原值留进 `redundancy_raw`。"""
+    v = rec.get("redundancy")
+    if isinstance(v, str):
+        canon = _REDUNDANCY_ALIASES.get(v.strip())
+        if canon and canon != v:
+            rec.setdefault("redundancy_raw", v)
+            rec["redundancy"] = canon
+    return rec
 
 
 def _normalize_record(rec: dict) -> dict:
@@ -373,6 +408,63 @@ def upsert_clusters(topic: str, records: list[dict]) -> dict:
     _atomic_write(p, {"topic": topic, "updated": today(), "clusters": rows})
     return {"action": "写入", "topic": topic, "added": added, "updated": updated,
             "n": len(rows), "path": str(p)}
+
+
+def _rejected_path(topic: str) -> pathlib.Path:
+    return TOPICS / _safe_dirname(topic) / "rejected.json"
+
+
+def upsert_rejected(topic: str, records: list[dict]) -> dict:
+    """写入某议题的「看过但淘汰」清单（按 bvid 覆盖式合并）。
+
+    存在的意义只有一个：**下一轮不用重新分诊同一批候选**。
+    所以只存四样：bvid / 标题 / 评级 / 淘汰理由（+ 阶段与日期）。
+    """
+    if not topic:
+        raise ValueError("写淘汰记录需要 topic（议题名）")
+    p = _rejected_path(topic)
+    cur = _load(p, {"topic": topic, "rejected": []})
+    rows = list(cur.get("rejected") or [])
+    idx = {str(r.get("bvid")): i for i, r in enumerate(rows)}
+    added = updated = 0
+    for rec in records:
+        rec = _normalize_record(rec)
+        rec["topic"] = topic
+        _check_fields(rec, REJECTED_FIELDS, "rejected record")
+        _check_shapes(rec, REJECTED_SHAPES, "rejected record")
+        if not rec.get("bvid"):
+            raise ValueError("rejected record 必须含 bvid")
+        rec.setdefault("date", today())
+        # 不要 upper()：BV 号是**大小写敏感**的（BV1jhn16GEcv ≠ BV1JHN16GECV）。
+        # 排除比对在 search 层做 casefold，存原样才对。
+        bv = str(rec["bvid"]).strip()
+        rec["bvid"] = bv
+        if bv in idx:
+            rows[idx[bv]] = {**rows[idx[bv]], **rec}
+            updated += 1
+        else:
+            idx[bv] = len(rows)
+            rows.append(rec)
+            added += 1
+    cur.update({"topic": topic, "rejected": rows,
+                "_meta": {"updated": today(), "n": len(rows)}})
+    _atomic_write(p, cur)
+    return {"action": "写入淘汰记录", "topic": topic, "added": added,
+            "updated": updated, "n": len(rows), "file": str(p)}
+
+
+def read_rejected(topic: str, limit: int = 500) -> dict:
+    """读回某议题的淘汰清单（下一轮直接喂给 `exclude_bvids`）。"""
+    p = _rejected_path(topic)
+    if not p.exists():
+        return {"exists": False, "topic": topic,
+                "note": "这个议题还没有淘汰记录。报告 §6.3 的名单应通过"
+                        "registry_upsert(kind='rejected', topic=...) 入库。"}
+    d = _load(p, {})
+    rows = list(d.get("rejected") or [])
+    return {"exists": True, "topic": str(d.get("topic") or topic), "n": len(rows),
+            "exclude_bvids": [r.get("bvid") for r in rows][:limit],
+            "rejected": rows[:limit]}
 
 
 def read_clusters(topic: str) -> dict:
@@ -598,7 +690,7 @@ def upsert_video(rec: dict) -> dict:
       且议题集合是旧的子集 ⇒ 保留旧评级，新评级记进 `grade_history`
     * 其余字段新值优先（`verdict` / `redundancy` / `selected_because` 等随本轮判断走）
     """
-    rec = _normalize_record(rec)
+    rec = _canonical_redundancy(_normalize_record(rec))
     bvid = rec.get("bvid")
     if not bvid:
         raise ValueError("video record 必须含 bvid")
@@ -833,10 +925,29 @@ def append_insights(topic: str, records: list[dict]) -> dict:
                 "injection_rejected": injected, "duplicates": len(dup),
                 "file": str(INSIGHTS), "size_kb": round(INSIGHTS.stat().st_size / 1024, 1),
                 "note": "这些条目已经写过了，没有重复追加。"}
-    with INSIGHTS.open("a", encoding="utf-8") as f:
-        f.write(head + "\n".join(fresh) + "\n")
+
+    # 同名小节（同一天 + 同一议题）已经有的话，**并进去**，不再新开一段。
+    # 为什么要：2026-10-28 盘点发现 24 段里有 5 个议题被追加成两段
+    # （同一个 `## 2026-10-21 · 主流二游社区` 出现 3 次），
+    # 直接后果是 ① 文件虚胖到 67 KB（超过自己定的 64 KB 维护线）
+    # ② `read_insights(topic=...)` 命中后要读多段，人看也乱。
+    # 只合并"同一天同一议题"——跨天的段保留，因为"什么时候知道的"本身是信息。
+    marker = f"{today()} · {topic}"
+    merged = False
+    parts = existing.split("\n## ")
+    for i in range(1, len(parts)):
+        if parts[i].split("\n", 1)[0].strip() == marker:
+            parts[i] = parts[i].rstrip("\n") + "\n" + "\n".join(fresh) + "\n"
+            merged = True
+            break
+    if merged:
+        INSIGHTS.write_text("\n## ".join(parts), encoding="utf-8")
+    else:
+        with INSIGHTS.open("a", encoding="utf-8") as f:
+            f.write(head + "\n".join(fresh) + "\n")
     return {"ok": True, "written": len(fresh), "rejected": bad,
             "injection_rejected": injected, "duplicates": len(dup),
+            "merged_into_existing_section": merged,
             "file": str(INSIGHTS), "size_kb": round(INSIGHTS.stat().st_size / 1024, 1)}
 
 
@@ -896,6 +1007,7 @@ STAGE_PROTOCOLS = STAGING / "protocols.json"
 _STAGE_FILES = {
     "source": "sources.json", "video": "videos.json", "insight": "insights.json",
     "topic": "topics.json", "protocol": "protocols.json", "cluster": "clusters.json",
+    "rejected": "rejected.json",
 }
 _STAGE_SPEC = {
     "source": (SOURCE_FIELDS, SOURCE_SHAPES, "mid"),
@@ -905,6 +1017,8 @@ _STAGE_SPEC = {
     "insight": (None, None, None),
     # 簇的主键是三元组：同一视频下的不同簇要分开存，同名簇才覆盖。
     "cluster": (CLUSTER_FIELDS, CLUSTER_SHAPES, ("topic", "bvid", "cluster")),
+    # 淘汰记录按 (topic, bvid) 去重：同一议题下同一条视频只留一条理由（后写覆盖）
+    "rejected": (REJECTED_FIELDS, REJECTED_SHAPES, ("topic", "bvid")),
 }
 
 
@@ -1025,7 +1139,7 @@ def commit_staging() -> dict:
       * topic：写入议题档案；protocol：写入协议文件（走各自的正常路径）
     """
     out = {"source": [], "video": [], "insight": [], "topic": [], "protocol": [],
-           "cluster": [], "committed": 0}
+           "cluster": [], "rejected": [], "committed": 0}
     for kind in ("source", "video"):
         recs = _stage_load(kind)
         for r in recs:
@@ -1083,6 +1197,23 @@ def commit_staging() -> dict:
             out["cluster"].append({"error": f"{type(e).__name__}: {e}", "topic": topic})
     if recs:
         _stage_save("cluster", [])
+
+    # 淘汰记录同样按议题分组落盘（`topics/<议题>/rejected.json`）
+    recs = _stage_load("rejected")
+    out["rejected"] = []
+    by_topic_r: dict[str, list[dict]] = {}
+    for r in recs:
+        clean = {k: v for k, v in r.items() if not k.startswith("_")}
+        by_topic_r.setdefault(clean.get("topic") or "未指定议题", []).append(clean)
+    for topic, items in by_topic_r.items():
+        try:
+            res = upsert_rejected(topic, items)
+            out["rejected"].append(res)
+            out["committed"] += (res.get("added") or 0) + (res.get("updated") or 0)
+        except Exception as e:                                # noqa: BLE001
+            out["rejected"].append({"error": f"{type(e).__name__}: {e}", "topic": topic})
+    if recs:
+        _stage_save("rejected", [])
 
     out["ok"] = True
     out["note"] = "暂存区已清空，正式库已更新。"

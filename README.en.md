@@ -50,12 +50,13 @@ Once installed (see [Quick start](#quick-start)), the **first thing you say** to
 Tell me what Bilibili people say about ‘whether ordinary people's investment advice actually holds up’.
 ```
 
-**You never specify "deep" or "brief"** — **your wording decides the mode**:
+**You never specify the intensity** — **wording sets the base tier, topic complexity decides whether to escalate**:
 
 | What you say | What it does |
 |---|---|
-| "Tell me about X on Bilibili" | **Deep**: 10–20 minutes, produces md + HTML + PDF |
-| "Give me a **brief** read on Bilibili's take on X" | **Brief**: 3–5 minutes, markdown only |
+| "Tell me about X on Bilibili" | **L2 Deep**: 10–20 minutes, produces md + HTML + PDF |
+| "Give me a **brief** read on Bilibili's take on X" | **L1 Brief**: 3–5 minutes, markdown only |
+| The topic has **8+ comparable subjects** (characters / products / cities) or is a **ranking / "who's bigger"** question | Escalates to **L3 Assault**: builds a reproducible matrix first, then concludes, 25–45 minutes |
 
 > You may paste BV ids in the background as leads
 > (`Tell me about X on Bilibili. Background: BV1fxni6XEwD`), but that is **not** an analysis
@@ -154,15 +155,23 @@ so someone else can audit your conclusion against the ledger.
 
 ---
 
-## Deep vs. brief mode
+## Three intensity tiers: L1 Brief / L2 Deep / L3 Assault
 
-**Your wording decides — you never get a questionnaire.** The system switches by itself.
+**Wording sets the base tier; complexity decides escalation.** No questionnaire — and the tier
+is chosen by the topic, not by the user (how many subjects, does it need a ranking).
 
-| | **Deep** (default) | **Brief** |
-|---|---|---|
-| **What you say** | "Tell me about **X** on Bilibili"<br>"What's the state of **X** on Bilibili" | "Give me a **brief** read on Bilibili's take on X"<br>"**Quickly** summarize what Bilibili thinks about X" |
-| **What you get** | Decision-level conclusion + full evidence chain<br>(source map / findings / conflicts / gaps / bias statement)<br>**md + HTML + PDF** | Conclusion + key findings + main conflict + biggest gap<br>**markdown only by default** (ask for HTML/PDF and you'll get it) |
-| **Roughly** | 10–20 minutes / ~40 tool calls | 3–5 minutes / ~10 tool calls |
+| | **L2 Deep** (default) | **L1 Brief** | **L3 Assault** (automatic or on request) |
+|---|---|---|---|
+| **What you say** | "Tell me about **X** on Bilibili"<br>"What's the state of **X** on Bilibili" | "Give me a **brief** read on Bilibili's take on X"<br>"**Quickly** summarize what Bilibili thinks about X" | Nothing — it escalates when **8+ subjects / ranking question / saturated keyword families / a previous round left structural gaps**; saying "**every / each / exhaustively**" also triggers it |
+| **What it adds** | — | Cuts channels and process, not the evidence bar | **Changes the unit of measurement** (N subjects x 1 search) + 15–25 profiling subagents + a re-fetch round |
+| **What you get** | Decision-level conclusion + full evidence chain<br>(source map / findings / conflicts / gaps / bias statement)<br>**md + HTML + PDF** | Conclusion + key findings + main conflict + biggest gap<br>**markdown only by default** | Same as L2, plus a **reproducible ranking matrix** and per-subject profiles |
+| **Roughly** | 10–20 minutes / ~40 tool calls | 3–5 minutes / ~10 tool calls | **25–45 minutes / 600–1,600 upstream requests** |
+
+> **Why L3 exists**: the 2026-10-26 "top anime-game characters" run started with 206 candidates,
+> 13 deep reads and 11 subagents — and was still judged "not broad enough, not deep enough".
+> The turning point was not reading more: round 2 changed the unit of measurement from
+> "13 videos" to "42 characters x 1 search" — and used **fewer** upstream requests (141 vs 372).
+> The rule lives in `references/analysis-depth.md`: **every escalation must add an axis, not just more reads.**
 
 > **"Tool calls" ≠ "upstream requests"**: one `scan_topic` call fans out to one upstream request
 > per keyword, so 40 tool calls correspond to roughly 300 upstream requests. Both numbers are
@@ -253,10 +262,12 @@ The full rubric is in [`references/source-grading.md`](references/source-grading
 ```bash
 git clone https://github.com/DavidLearning1023/bilibili-info-gathering.git
 cd bilibili-info-gathering
-python scripts/install_mcp.py     # venv + deps + MCP registration + self-check, one step
+python scripts/install_mcp.py --with-docs   # venv + deps + MCP registration + self-check, one step
+                                            # drop --with-docs if you don't need HTML/PDF output
 ```
 
-Requires **Python ≥ 3.10**. After install you have two entry points:
+Requires **Python ≥ 3.10**. Transcript fetching additionally needs a login — one QR-code command,
+see [INSTALL.md](INSTALL.md) §2.4. After install you have two entry points:
 
 | Command | Purpose |
 |---|---|
