@@ -13,7 +13,7 @@
   <a href="https://github.com/DavidLearning1023/bilibili-info-gathering/actions/workflows/tests.yml"><img alt="tests" src="https://github.com/DavidLearning1023/bilibili-info-gathering/actions/workflows/tests.yml/badge.svg"></a>
   <img alt="version" src="https://img.shields.io/github/v/release/DavidLearning1023/bilibili-info-gathering?label=version&color=6E56CF">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
-  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
+  <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-blue.svg">
   <img alt="MCP stdio" src="https://img.shields.io/badge/MCP-stdio-6E56CF.svg">
 </p>
 
@@ -270,7 +270,7 @@ python scripts/install_mcp.py --with-docs   # 建 venv + 装依赖 + 注册 MCP 
                                             # 去掉 --with-docs 也能用，只是不出 HTML/PDF
 ```
 
-要求 **Python ≥ 3.10**；要取字幕还需登录态（**扫码一条命令**，见 [INSTALL.md](INSTALL.md) §2.4）。
+要求 **Python ≥ 3.11**；要取字幕还需登录态（**扫码一条命令**，见 [INSTALL.md](INSTALL.md) §2.4）。
 装完有两个入口：
 
 | 命令 | 用途 |

@@ -179,8 +179,8 @@ def check_identity() -> None:
 
 def check_deps() -> None:
     section("1/5 依赖")
-    if sys.version_info < (3, 10):
-        record("FAIL", f"Python {sys.version.split()[0]} 过低，需要 3.10+",
+    if sys.version_info < (3, 11):
+        record("FAIL", f"Python {sys.version.split()[0]} 过低，需要 3.11+",
                "升级 Python 后重跑")
     else:
         record("OK", f"Python {sys.version.split()[0]}")

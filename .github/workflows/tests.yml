@@ -11,8 +11,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 3.10 是声明的最低版本；3.13 是当前开发版本
-        python-version: ["3.10", "3.13"]
+        # 3.11 是声明的最低版本；3.13 是当前开发版本
+        python-version: ["3.11", "3.13"]
     env:
       # 冒烟测试要联网 + 需要登录态；CI 里没有 Cookie，跳过而不是假装通过
       BIG_SKIP_NETWORK: "1"

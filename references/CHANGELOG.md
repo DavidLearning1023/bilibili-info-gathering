@@ -10,6 +10,42 @@
 
 ---
 
+## 2026-11-13 · 未发布 · 批次 Q：最低 Python 提到 3.11，清掉 Pillow 安全告警
+
+**类型**：依赖与兼容性（breaking）+ CI + 自检脚本 + 文档。**版本号仍为 1.3.0**，
+本批次随下一个正式版发布。
+
+**触发**：Dependabot 在默认分支报 43 条告警（5 critical / 24 high / 14 medium）。
+逐条核对后发现全部命中同一个包 `Pillow`：43 条公告 × 一个旧版本，不是 43 个依赖要修。
+
+**根因**：`requires-python = ">=3.10"` 且 `images = ["pillow>=10.0"]`，
+`uv.lock` 因此解析出两条 Pillow —— `12.3.0`（Python 3.10）与 `13.0.0`（Python ≥3.11）。
+所有公告的 first_patched_version 都是 `13.0.0`；PyPI 上 13.0.0 声明
+`requires_python >=3.11`，12.3.0 才是 `>=3.10`。
+⇒ **只要保留 3.10 支持，就不存在能消掉告警的升级路径**；3.11+ 分支本来就是安全的。
+这也是仓库开了 `dependabot_security_updates` 却始终没有自动 PR 的原因。
+
+**决策**：放弃 3.10。本机开发与 CI 的另一端都是 3.13，3.10 只用于守声明的最低版本，
+没有真实 3.10 用户证据，机会成本最低。
+
+### 改了什么
+
+| 位置 | 改动 |
+|---|---|
+| `pyproject.toml` | `requires-python >=3.11`；`images = ["pillow>=13.0.0"]` |
+| `uv.lock` | 重新 `uv lock`，移除 12.3.0 与 `< '3.11'` 的 resolution-marker |
+| `.github/workflows/tests.yml` | matrix `["3.10","3.13"]` → `["3.11","3.13"]` |
+| `scripts/check_setup.py` / `install_mcp.py` | 版本判断与提示文案 3.10 → 3.11 |
+| `README*` / `INSTALL.md` / `CONTRIBUTING*` / 两处源码注释 | 同步最低版本与 lock 包数 |
+
+### 没做的事
+
+- 不改版本号、不补发 tag：刚发的 v1.3.0 仍有效，本批次按既有惯例记为「未发布」。
+- 不回写历史条目里的 `test (3.10)`：CHANGELOG 是历史快照，按文件开头规则不改当时原文。
+- 不在 GitHub 手工 dismiss 告警：push 后让依赖图重扫自动关闭，比手工掩盖更可核对。
+
+---
+
 ## 2026-10-29 · v1.3.0 · 自检加存量基线：从"全库皆红"变成"只报新增"
 
 **类型**：自检层（`scripts/render_briefing.py`）+ 文档 + 测试。1.2.0 → **1.3.0**

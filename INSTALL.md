@@ -36,7 +36,7 @@
 | 项 | 要求 | 说明 |
 |---|---|---|
 | Agent 客户端 | 支持 `SKILL.md` 规范 **且** 支持 stdio MCP | MiniMax Code / WorkBuddy / Claude Code 等（按通用规范编写，不绑定客户端） |
-| Python | **3.10+** | 取数核心只用标准库（`urllib`）；MCP SDK 与 Pillow 才需要 pip 装 |
+| Python | **3.11+** | 取数核心只用标准库（`urllib`）；MCP SDK 与 Pillow 才需要 pip 装 |
 | **Node.js** | **≥ 20，可选** | **仅当**要用上游 `@xzxzzx/bilibili-mcp` 或它的**扫码登录向导**时需要（npx 启动）。本仓库自己的 MCP 不需要 Node |
 | B站账号 | 可选 | **仅取字幕**时需要。拿登录态有两条路，**优先用扫码向导**（见 2.4） |
 | Pillow | 可选 | **仅**「评论区图片联系表」需要（`get_comment_images`） |

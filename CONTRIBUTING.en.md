@@ -56,7 +56,7 @@ Extras: `images` = Pillow (comment contact sheets) · `docs` = markdown + playwr
 (HTML/PDF rendering) · `dev` = pytest.
 
 **If you use uv**: `uv sync --extra images --extra docs --extra dev`.
-`uv.lock` is committed (53 packages, covering Python 3.10–3.14 across three platforms); its job is
+`uv.lock` is committed (43 packages, covering Python 3.11–3.14 across three platforms); its job is
 to make **two machines install byte-identical dependencies**, whereas `pip install` may resolve
 different versions each time. After changing a dependency in `pyproject.toml`, run `uv lock` —
 otherwise the lockfile drifts silently and the next `uv sync` quietly uses the old versions.

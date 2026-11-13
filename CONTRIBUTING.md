@@ -52,7 +52,7 @@ pip install -e ".[images,docs,dev]"
 `dev` = pytest。
 
 **用 uv 的话**：`uv sync --extra images --extra docs --extra dev`。
-`uv.lock` 已入库（53 个包，跨 Python 3.10–3.14 与三平台），作用是**保证两台机器装出完全一致的依赖**——
+`uv.lock` 已入库（43 个包，跨 Python 3.11–3.14 与三平台），作用是**保证两台机器装出完全一致的依赖**——
 `pip install` 每次解析到的版本可能不同。改了 `pyproject.toml` 的依赖之后，要跑一次 `uv lock`，
 否则锁文件会静默失真，下次 `uv sync` 才以旧版本生效。
 用 pip 的人不受影响：pip 根本不读 `uv.lock`。

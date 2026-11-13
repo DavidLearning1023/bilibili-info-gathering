@@ -99,7 +99,7 @@ def _degraded(*items) -> list[str]:
 def _est_tokens(text: str) -> int:
     """粗估 token 数。口径：**CJK 字符 × 0.7 + 其它字符 × 0.25**。
 
-    为什么不用真 tokenizer：会给「任何 Python 3.10+ 直接跑起来」的前提加一个依赖。
+    为什么不用真 tokenizer：会给「任何 Python 3.11+ 直接跑起来」的前提加一个依赖。
     这个数的用途是**比较不同调用的相对成本**（哪个调用最烧上下文），
     **不是**精确 token 数，引用时必须带这个口径。
     """

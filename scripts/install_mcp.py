@@ -159,7 +159,7 @@ def mcp_entry(python: pathlib.Path) -> dict:
 # ------------------------------------------------------------------ venv
 
 def find_base_python() -> str:
-    """找一个 >= 3.10 的解释器来建 venv。"""
+    """找一个 >= 3.11 的解释器来建 venv。"""
     for cand in ([sys.executable] if sys.executable else []) + \
                 (shutil.which("python3.12"), shutil.which("python3.11"),
                  shutil.which("python3"), shutil.which("python")):
@@ -171,7 +171,7 @@ def find_base_python() -> str:
             maj, mino = (int(x) for x in r.stdout.strip().split("."))
         except (OSError, ValueError, subprocess.SubprocessError):
             continue
-        if (maj, mino) >= (3, 10):
+        if (maj, mino) >= (3, 11):
             return cand
     return sys.executable
 
