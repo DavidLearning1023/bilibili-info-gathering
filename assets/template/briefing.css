@@ -39,8 +39,15 @@ body{
 .masthead{padding-top:44px}
 .kicker{font-family:var(--sans); font-size:13.5px; font-weight:600; letter-spacing:.2em;
         color:var(--accent); margin:0 0 14px}
-h1{font-family:var(--sans); font-size:40px; font-weight:700; line-height:1.26;
-   letter-spacing:-.015em; margin:0 0 18px; text-wrap:balance}
+/* 标题必须与正文同宽、共用一条右边界（2026-10-29 修）
+   ① 字号由 render_briefing.py 按标题长度算好写进 --h1：长议题（22 字）降到 34px
+      一行放下，短议题仍是 40px。这样标题行的右端与正文右端基本齐平。
+   ② **不要用 text-wrap:balance**：它为让两行等长，会把第一行提前截断。
+      实测「电脑三大件价格行情…」两行只占 591 / 595px，右边空 190px，
+      而正文用满 780px——读者看到的就是"标题比内容窄、内容提前换行"。
+   ③ text-wrap:pretty 只在真需要两行时避免末行孤字，不牺牲填满。 */
+h1{font-family:var(--sans); font-size:var(--h1,40px); font-weight:700; line-height:1.26;
+   letter-spacing:-.015em; margin:0 0 18px; text-wrap:pretty}
 .meta{font-family:var(--sans); font-size:14px; line-height:1.9; color:var(--mute);
       border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
       padding:13px 0; margin:0}
@@ -111,8 +118,14 @@ li{margin:0 0 8px}
 hr{border:0; border-top:1px solid var(--rule); margin:40px 0}
 code{font-family:var(--mono); font-size:.86em; background:var(--panel-2);
      padding:1px 5px; border-radius:0}
+/* 漏斗 / 协议原文这类「数据块」：保留灰底与左边框表示"这是机器文本"，
+   但**字体换成正文无衬线**。原因是等宽字体没有中文字形，浏览器回落到
+   某个中文字体后，中英混排的字距会明显不匀，长行读起来像粘坏的日志
+   （2026-10-29 实测：§五 的漏斗块在 1440px 下中文挤成一片）。 */
 pre{background:var(--panel); border-left:3px solid var(--ink-2); padding:16px 18px;
     overflow:auto; font-family:var(--mono); font-size:13.5px; line-height:1.7; margin:0 0 22px}
+.body pre{font-family:var(--sans); font-size:14px; line-height:1.95;
+          letter-spacing:.01em; color:var(--ink-2)}
 pre code{background:none; padding:0}
 
 /* ---------- 引用块 = 提示条 ---------- */
@@ -132,8 +145,13 @@ td{border-bottom:1px solid var(--rule); padding:11px 12px 11px 0; vertical-align
 td:last-child,th:last-child{padding-right:0}
 tbody tr:hover{background:var(--panel)}
 td.n{font-variant-numeric:tabular-nums; white-space:nowrap}
-table.wide{font-size:13.6px}
+/* 宽表用固定布局：9 列交给浏览器自动分配时，宽度会优先给「最长且不可断」的
+   单元格（BV 号、URL），标题列被压到 12 字宽、断成三四行（2026-10-29 实测）。
+   列宽由 render_briefing.py 按表头名注入 colgroup 元素（不写标签字面量：
+   注释会被原样嵌进每份 HTML 的 style 块，带尖括号会让任何"数标签"的脚本误判）。 */
+table.wide{font-size:13.6px; table-layout:fixed}
 table.wide td{padding:9px 10px 9px 0}
+table.wide th{padding-right:10px}
 
 /* ---------- 评级徽章（灰度梯度，不引第二色相） ---------- */
 .grade{display:inline-block; font-family:var(--sans); font-size:12px; font-weight:700;

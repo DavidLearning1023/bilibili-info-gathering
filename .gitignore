@@ -37,3 +37,6 @@ examples/*.pdf
 .vscode/
 .idea/
 .DS_Store
+
+# 本地测量/排版草稿（跑一次就落的报告片段、点击日志、量测脚本）
+/_tmp/

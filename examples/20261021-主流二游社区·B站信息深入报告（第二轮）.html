@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>主流二游社区 · B站信息深入报告（第二轮）</title>
+<title>主流二游社区（第二轮）·B站信息深入报告.md</title>
 <style>
 /* ==========================================================================
    议题情报简报 · 长文编辑轨样式表
@@ -47,8 +47,15 @@ body{
 .masthead{padding-top:44px}
 .kicker{font-family:var(--sans); font-size:13.5px; font-weight:600; letter-spacing:.2em;
         color:var(--accent); margin:0 0 14px}
-h1{font-family:var(--sans); font-size:40px; font-weight:700; line-height:1.26;
-   letter-spacing:-.015em; margin:0 0 18px; text-wrap:balance}
+/* 标题必须与正文同宽、共用一条右边界（2026-10-29 修）
+   ① 字号由 render_briefing.py 按标题长度算好写进 --h1：长议题（22 字）降到 34px
+      一行放下，短议题仍是 40px。这样标题行的右端与正文右端基本齐平。
+   ② **不要用 text-wrap:balance**：它为让两行等长，会把第一行提前截断。
+      实测「电脑三大件价格行情…」两行只占 591 / 595px，右边空 190px，
+      而正文用满 780px——读者看到的就是"标题比内容窄、内容提前换行"。
+   ③ text-wrap:pretty 只在真需要两行时避免末行孤字，不牺牲填满。 */
+h1{font-family:var(--sans); font-size:var(--h1,40px); font-weight:700; line-height:1.26;
+   letter-spacing:-.015em; margin:0 0 18px; text-wrap:pretty}
 .meta{font-family:var(--sans); font-size:14px; line-height:1.9; color:var(--mute);
       border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
       padding:13px 0; margin:0}
@@ -119,8 +126,14 @@ li{margin:0 0 8px}
 hr{border:0; border-top:1px solid var(--rule); margin:40px 0}
 code{font-family:var(--mono); font-size:.86em; background:var(--panel-2);
      padding:1px 5px; border-radius:0}
+/* 漏斗 / 协议原文这类「数据块」：保留灰底与左边框表示"这是机器文本"，
+   但**字体换成正文无衬线**。原因是等宽字体没有中文字形，浏览器回落到
+   某个中文字体后，中英混排的字距会明显不匀，长行读起来像粘坏的日志
+   （2026-10-29 实测：§五 的漏斗块在 1440px 下中文挤成一片）。 */
 pre{background:var(--panel); border-left:3px solid var(--ink-2); padding:16px 18px;
     overflow:auto; font-family:var(--mono); font-size:13.5px; line-height:1.7; margin:0 0 22px}
+.body pre{font-family:var(--sans); font-size:14px; line-height:1.95;
+          letter-spacing:.01em; color:var(--ink-2)}
 pre code{background:none; padding:0}
 
 /* ---------- 引用块 = 提示条 ---------- */
@@ -140,8 +153,13 @@ td{border-bottom:1px solid var(--rule); padding:11px 12px 11px 0; vertical-align
 td:last-child,th:last-child{padding-right:0}
 tbody tr:hover{background:var(--panel)}
 td.n{font-variant-numeric:tabular-nums; white-space:nowrap}
-table.wide{font-size:13.6px}
+/* 宽表用固定布局：9 列交给浏览器自动分配时，宽度会优先给「最长且不可断」的
+   单元格（BV 号、URL），标题列被压到 12 字宽、断成三四行（2026-10-29 实测）。
+   列宽由 render_briefing.py 按表头名注入 colgroup 元素（不写标签字面量：
+   注释会被原样嵌进每份 HTML 的 style 块，带尖括号会让任何"数标签"的脚本误判）。 */
+table.wide{font-size:13.6px; table-layout:fixed}
 table.wide td{padding:9px 10px 9px 0}
+table.wide th{padding-right:10px}
 
 /* ---------- 评级徽章（灰度梯度，不引第二色相） ---------- */
 .grade{display:inline-block; font-family:var(--sans); font-size:12px; font-weight:700;
@@ -211,11 +229,9 @@ table.wide td{padding:9px 10px 9px 0}
 <div class="page">
 <header class="masthead">
 <p class="kicker">B 站议题深入报告</p>
-<h1>主流二游社区 · B站信息深入报告（第二轮）</h1>
+<h1 style="--h1:40px">主流二游社区（第二轮）</h1>
 <p class="meta"><span>检索日期 <b>2026-10-21（第二轮）</b></span><span>编排 <b>2026-10-22 新版六节重排（原为旧版七节；结论与数字均未改动）</b></span><span>意图类型 <b>态度类（what / why） —— 沿用第一轮判定</b></span><span>核心问题 <b>①二游社区的内部结构（玩家如何分层、社区据点如何分工）②「热闹」的两台引擎（受众广 / 争议多）分别由什么生产，哪些机制是品类通用的 ③2020→2026 社区发生了哪些结构性变化</b></span><span>检索协议 <b>10 组关键词族 / 34 个族内关键词（+6 轮定向补检）/ 候选池 835 + 619 条（两轮去重前的上界）/ 深挖 9 条</b></span><span>本文件是第二轮的独立产物，与第一轮《主流二游社区·B站信息深入报告.md》（同库 20261021-深入分析-主流二游社区/）并列，互不覆盖</span><span>第一轮结论未被读取或复述；本轮结论均由本轮取证独立得出，仅在「与第一轮的交叉」处做显式对照</span></p>
 </header>
-<div class="legend"><dl><div class="lg-row"><dt>来源 A–F</dt><dd><p class="lg-note">来源可靠性：这个信源值不值得信（与内容质量无关）</p><span class="lg-item"><span class="grade">A</span>一手/权威</span><span class="lg-item"><span class="grade">B</span>专业二手</span><span class="lg-item"><span class="grade">C</span>一般二手</span><span class="lg-item"><span class="grade">D</span>观点型</span><span class="lg-item"><span class="grade">E</span>未列入常规档</span><span class="lg-item"><span class="grade">F</span>无法判断</span></dd></div><div class="lg-row"><dt>可用度 1–4</dt><dd><p class="lg-note">可用度：对本议题有没有用（永远相对于本议题，不是质量评分）</p><span class="lg-item"><b class="lg-num">1</b>直接可用</span><span class="lg-item"><b class="lg-num">2</b>可参考</span><span class="lg-item"><b class="lg-num">3</b>仅背景</span><span class="lg-item"><b class="lg-num">4</b>无关/标题党</span></dd></div><div class="lg-row"><dt>证据 / 缺口</dt><dd><span class="lg-item"><span class="cv cv-strong">✅</span>多源独立</span><span class="lg-item"><span class="cv cv-mid">◐</span>部分印证</span><span class="lg-item"><span class="cv cv-weak">⚠️</span>单一来源</span><span class="lg-sep">｜</span><span class="lg-item"><span class="gap gap-struct">结构性边界</span>平台不承载</span><span class="lg-item"><span class="gap gap-search">检索未覆盖</span>可再搜</span><span class="lg-item"><span class="gap gap-todo">本次未做</span>可直接补</span></dd></div></dl><p class="lg-hint">评级读作「<b>来源字母</b> × <b>可用度数字</b>」：<span class="grade g-B">B2</span> ＝ 专业二手 + 可参考。字母管「信不信得过这个来源」，数字管「对本议题有多少用」，两者不一定同向（大 UP 跨领域发言就是 A4，无名用户贴出原始统计可以是 F1）。</p></div>
-<div class="overview"><div class="ov-cell"><dt>信源评级分布<span class="ov-sub">（信源地图去重后 26 条）</span></dt><dd><div class="ov-row"><span class="ov-key"><span class="grade g-A">A</span></span><span class="ov-bar"><i class="lv-a" style="width:12%"></i></span><span class="ov-n">3</span></div><div class="ov-row"><span class="ov-key"><span class="grade g-B">B</span></span><span class="ov-bar"><i class="lv-b" style="width:50%"></i></span><span class="ov-n">13</span></div><div class="ov-row"><span class="ov-key"><span class="grade g-C">C</span></span><span class="ov-bar"><i class="lv-c" style="width:38%"></i></span><span class="ov-n">10</span></div></dd></div><div class="ov-cell"><dt>证据强度分布</dt><dd><div class="ov-row"><span class="ov-key">多源</span><span class="ov-bar"><i class="lv-a" style="width:24%"></i></span><span class="ov-n">19</span></div><div class="ov-row"><span class="ov-key">单一</span><span class="ov-bar"><i class="lv-c" style="width:76%"></i></span><span class="ov-n">59</span></div></dd></div></div>
 <div class="body"><h2>一、结论</h2>
 <p><strong>二游社区的「热闹」不是一场持续升温的争论，而是一台稳定的双引擎机器：一边用「几乎不花钱就能玩到九成内容」把极宽的人群拉进来，另一边把玩家之间与厂商—玩家之间的分歧制度化成可复制的节奏视频。</strong> 本轮补上了第一轮完全没覆盖的三层证据：</p>
 <ol>
@@ -230,9 +246,9 @@ table.wide td{padding:9px 10px 9px 0}
 </li>
 </ol>
 <p><strong>最重要的一处修正</strong>：第一轮把「强度党 vs 厨子」记成玩家内部的对立阵营。本轮发现<strong>这不是两派，而是同一根预算约束轴的两端</strong>——Negentropie 的表述是「用强度逼氪 XP 玩家，用 XP 撬动强度党的钱包」「真正优质的二游 XP 强度玩家是五五开的」。玩家社区的真实分裂不发生在「强度党/厨子」之间，而发生在「同一份抽卡预算怎么分配」。</p>
-<p><strong>本轮唯一可核验的硬数字，且是单一来源</strong>：2026 年上半年国内二次元移动游戏市场实际营销收入 <strong>132.69 亿元，同比下降 8.97%</strong>（BV1ymaP6BED8，AI 字幕转述第三方产业报告，<strong>建议回原片核对</strong>）。本轮在 B 站上<strong>未能找到第二个独立来源</strong>，且同一视频评论区有直接反驳（96 赞/9 楼）。故此数字降级为「单一来源，未交叉验证」。</p>
+<p><strong>本轮唯一可核验的硬数字，且是单一来源</strong>：2026 年上半年国内二次元移动游戏市场实际营销收入 <strong>132.69 亿元，同比下降 8.97%</strong>（<a href="https://www.bilibili.com/video/BV1ymaP6BED8/">BV1ymaP6BED8</a>，AI 字幕转述第三方产业报告，<strong>建议回原片核对</strong>）。本轮在 B 站上<strong>未能找到第二个独立来源</strong>，且同一视频评论区有直接反驳（96 赞/9 楼）。故此数字降级为「单一来源，未交叉验证」。</p>
 <hr />
-<h2>二、发现</h2>
+<div class="legend"><dl><div class="lg-row"><dt>来源 A–F</dt><dd><p class="lg-note">来源可靠性：这个信源值不值得信（与内容质量无关）</p><span class="lg-item"><span class="grade">A</span>一手/权威</span><span class="lg-item"><span class="grade">B</span>专业二手</span><span class="lg-item"><span class="grade">C</span>一般二手</span><span class="lg-item"><span class="grade">D</span>观点型</span><span class="lg-item"><span class="grade">E</span>未列入常规档</span><span class="lg-item"><span class="grade">F</span>无法判断</span></dd></div><div class="lg-row"><dt>可用度 1–4</dt><dd><p class="lg-note">可用度：对本议题有没有用（永远相对于本议题，不是质量评分）</p><span class="lg-item"><b class="lg-num">1</b>直接可用</span><span class="lg-item"><b class="lg-num">2</b>可参考</span><span class="lg-item"><b class="lg-num">3</b>仅背景</span><span class="lg-item"><b class="lg-num">4</b>无关/标题党</span></dd></div><div class="lg-row"><dt>证据 / 缺口</dt><dd><span class="lg-item"><span class="cv cv-strong">✅</span>多源独立</span><span class="lg-item"><span class="cv cv-mid">◐</span>部分印证</span><span class="lg-item"><span class="cv cv-weak">⚠️</span>单一来源</span><span class="lg-sep">｜</span><span class="lg-item"><span class="gap gap-struct">结构性边界</span>平台不承载</span><span class="lg-item"><span class="gap gap-search">检索未覆盖</span>可再搜</span><span class="lg-item"><span class="gap gap-todo">本次未做</span>可直接补</span></dd></div></dl><p class="lg-hint">评级读作「<b>来源字母</b> × <b>可用度数字</b>」：<span class="grade g-B">B2</span> ＝ 专业二手 + 可参考。字母管「信不信得过这个来源」，数字管「对本议题有多少用」，两者不一定同向（大 UP 跨领域发言就是 A4，无名用户贴出原始统计可以是 F1）。</p></div><div class="overview"><div class="ov-cell"><dt>信源评级分布<span class="ov-sub">（信源地图去重后 26 条）</span></dt><dd><div class="ov-row"><span class="ov-key"><span class="grade g-A">A</span></span><span class="ov-bar"><i class="lv-a" style="width:12%"></i></span><span class="ov-n">3</span></div><div class="ov-row"><span class="ov-key"><span class="grade g-B">B</span></span><span class="ov-bar"><i class="lv-b" style="width:50%"></i></span><span class="ov-n">13</span></div><div class="ov-row"><span class="ov-key"><span class="grade g-C">C</span></span><span class="ov-bar"><i class="lv-c" style="width:38%"></i></span><span class="ov-n">10</span></div></dd></div><div class="ov-cell"><dt>证据强度分布</dt><dd><div class="ov-row"><span class="ov-key">多源</span><span class="ov-bar"><i class="lv-a" style="width:24%"></i></span><span class="ov-n">19</span></div><div class="ov-row"><span class="ov-key">单一</span><span class="ov-bar"><i class="lv-c" style="width:76%"></i></span><span class="ov-n">59</span></div></dd></div></div><h2>二、发现</h2>
 <h3>2.1 社区的真实使用方式：签到工具，不是公共空间</h3>
 <div class="tw"><table>
 <thead>
@@ -270,13 +286,13 @@ table.wide td{padding:9px 10px 9px 0}
 </tr>
 <tr>
 <td>「玩游不混圈，微笑面对每一天。米游社我就签个到看看大佬二创」</td>
-<td>BV14m4y1T7bx 评论 31 赞/17 楼</td>
+<td><a href="https://www.bilibili.com/video/BV14m4y1T7bx/">BV14m4y1T7bx</a> 评论 31 赞/17 楼</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-strong">✅</span> 同型</td>
 </tr>
 <tr>
 <td>米游社官方社区的实际功能面：签到奖励、地图工具、攻略、画师漫画</td>
-<td>BV14m4y1T7bx 评论 13 赞「米游社我就是签到，看官方资讯，体力，留影叙佳期，偶尔查查攻略」</td>
+<td><a href="https://www.bilibili.com/video/BV14m4y1T7bx/">BV14m4y1T7bx</a> 评论 13 赞「米游社我就是签到，看官方资讯，体力，留影叙佳期，偶尔查查攻略」</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 单一来源</td>
 </tr>
@@ -298,17 +314,17 @@ table.wide td{padding:9px 10px 9px 0}
 <td>「米社和库街这两个官社几乎不打，在官社里发帖说想尝试鸣或原的不仅不会被骂，反而很多人会好心提醒不要被外界声干扰玩的开心就好，主要是某手和某音这种视频平台，有玩原的和玩鸣的吵，还有自己人和自己人吵的」</td>
 <td><a href="https://www.bilibili.com/video/BV16cuHzeEw2/">BV16cuHzeEw2</a> 评论 63 赞/25 楼</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
-<td><span class="cv cv-strong">✅</span> <strong>与 BV14m4y1T7bx 的米游社事件复盘互相印证</strong>（官方社区内部是版主/删帖冲突，不是玩家互喷）</td>
+<td><span class="cv cv-strong">✅</span> <strong>与 <a href="https://www.bilibili.com/video/BV14m4y1T7bx/">BV14m4y1T7bx</a> 的米游社事件复盘互相印证</strong>（官方社区内部是版主/删帖冲突，不是玩家互喷）</td>
 </tr>
 <tr>
 <td>弹幕区分「圈内骂 vs 圈外踩」：「我们骂是希望游戏去改，圈外人大多是踩」</td>
-<td>BV16cuHzeEw2 弹幕 03:21</td>
+<td><a href="https://www.bilibili.com/video/BV16cuHzeEw2/">BV16cuHzeEw2</a> 弹幕 03:21</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 弹幕为位置信号，非观点统计</td>
 </tr>
 <tr>
 <td>米游社大别野 2023-01 的一个多月骂战，起因是「清理门户，让米游社变成米哈游玩家的米游社」，处理结果是「将明日方舟话题隐藏，所有相关帖也一并隐藏，必须得主动搜索才能看到」</td>
-<td>BV14m4y1T7bx 字幕 <a href="https://www.bilibili.com/video/BV14m4y1T7bx/?t=160">02:40</a>–<a href="https://www.bilibili.com/video/BV14m4y1T7bx/?t=218">03:38</a></td>
+<td><a href="https://www.bilibili.com/video/BV14m4y1T7bx/">BV14m4y1T7bx</a> 字幕 <a href="https://www.bilibili.com/video/BV14m4y1T7bx/?t=160">02:40</a>–<a href="https://www.bilibili.com/video/BV14m4y1T7bx/?t=218">03:38</a></td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> AI 字幕，<strong>建议回原片核对</strong>；但与第一轮已登记的「仙家军/鹰游社」符号互证</td>
 </tr>
@@ -340,13 +356,13 @@ table.wide td{padding:9px 10px 9px 0}
 </tr>
 <tr>
 <td>「社区舆情不该是制作组第一时间关注，这是公关甚至是法务的工作」（弹幕）</td>
-<td>BV1cKbV6mEi5 弹幕 01:28</td>
+<td><a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a> 弹幕 01:28</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 弹幕位置信号</td>
 </tr>
 <tr>
 <td>节奏生产的组织化证据：「创号→发布造谣视频→消失」「沉寂多年的号复活第一个视频就是锐评终末地」</td>
-<td>第一轮 BV1WngK6JEk1 评论区（414 赞、56 赞）</td>
+<td>第一轮 <a href="https://www.bilibili.com/video/BV1WngK6JEk1/">BV1WngK6JEk1</a> 评论区（414 赞、56 赞）</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-strong">✅</span> 第一轮已独立取证，本轮未推翻</td>
 </tr>
@@ -384,13 +400,13 @@ table.wide td{padding:9px 10px 9px 0}
 </tr>
 <tr>
 <td>议题迁移机制：「骂你强度方面产能方面得不到回应，过两天就会骂你剧情，再过两天就骂你建模，嘲讽你真投入，再过两天拿内鬼消息骂你」</td>
-<td>BV1cKbV6mEi5 评论 30 赞</td>
+<td><a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a> 评论 30 赞</td>
 <td><span class="grade g-C" title="来源 C · 一般二手｜可用度 2 · 可参考">C2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 单一来源</td>
 </tr>
 <tr>
 <td>黑产视角：「黑产太多了，游戏很好玩，每个版本更新的内容很多，可以看到制作组的努力，福利也很棒，但黑子串子每个版本揪着一个问题就狂喷」</td>
-<td>BV1yqgN6UEoF 评论 198 赞/109 楼</td>
+<td><a href="https://www.bilibili.com/video/BV1yqgN6UEoF/">BV1yqgN6UEoF</a> 评论 198 赞/109 楼</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 单一来源</td>
 </tr>
@@ -496,7 +512,7 @@ table.wide td{padding:9px 10px 9px 0}
 </tr>
 <tr>
 <td>终极形态：「现在一般云一下剧情，喜欢哪个角色买买周边，ai 跑跑图了，玩是太坐牢」</td>
-<td>BV1ymaP6BED8 评论 30 赞</td>
+<td><a href="https://www.bilibili.com/video/BV1ymaP6BED8/">BV1ymaP6BED8</a> 评论 30 赞</td>
 <td><span class="grade g-C" title="来源 C · 一般二手｜可用度 2 · 可参考">C2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 单一来源；与第一轮「日常负担即留存」互证（负担的终局不是退坑，是「云化」）</td>
 </tr>
@@ -534,7 +550,7 @@ table.wide td{padding:9px 10px 9px 0}
 </tr>
 <tr>
 <td>「玩游不混圈」的动机之一是「散节奏出现后不久我实在受不了就卸载了，后来再下回来，看了一圈社区后又卸了」（9 赞）</td>
-<td>BV14m4y1T7bx 评论</td>
+<td><a href="https://www.bilibili.com/video/BV14m4y1T7bx/">BV14m4y1T7bx</a> 评论</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 单一来源</td>
 </tr>
@@ -547,7 +563,7 @@ table.wide td{padding:9px 10px 9px 0}
 </tbody>
 </table></div>
 <h3>2.8 一手材料：回流玩家的账号页（已按编号回读原图）</h3>
-<p><code>get_comment_images</code> 对 BV1uebL6TESo 返回 <code>picture_verdict="must"</code>（52 条带图评论占样本赞量 <strong>41.1%</strong>），按 <code>grid[].file</code> 回读原图 <strong>#04</strong>（1,290×2,796 PNG）后确认：</p>
+<p><code>get_comment_images</code> 对 <a href="https://www.bilibili.com/video/BV1uebL6TESo/">BV1uebL6TESo</a> 返回 <code>picture_verdict="must"</code>（52 条带图评论占样本赞量 <strong>41.1%</strong>），按 <code>grid[].file</code> 回读原图 <strong>#04</strong>（1,290×2,796 PNG）后确认：</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -625,19 +641,19 @@ table.wide td{padding:9px 10px 9px 0}
 </tr>
 <tr>
 <td>「当你吃着性别对立和二游纷争的人血馒头时，可曾记起过那个高呼『镇站之宝正在消失』的自己呢？」（2026-10）</td>
-<td>小D酱_Official 投稿列表 BV1nyp761ERN（5,274 播放 / 6 评论）</td>
+<td>小D酱_Official 投稿列表 <a href="https://www.bilibili.com/video/BV1nyp761ERN/">BV1nyp761ERN</a>（5,274 播放 / 6 评论）</td>
 <td><span class="grade g-C" title="来源 C · 一般二手｜可用度 3 · 仅背景">C3</span></td>
 <td><span class="cv cv-weak">⚠️</span> 仅登记标题，未深挖</td>
 </tr>
 <tr>
 <td>外部视角的成规模消费：「盘点圈外人对绝区零玩家的刻板印象」（57.6 万播放 / 3,275 评论）</td>
-<td>BV18sbR61ETK</td>
+<td><a href="https://www.bilibili.com/video/BV18sbR61ETK/">BV18sbR61ETK</a></td>
 <td><span class="grade g-C" title="来源 C · 一般二手｜可用度 3 · 仅背景">C3</span></td>
 <td><span class="cv cv-weak">⚠️</span> 未深挖</td>
 </tr>
 <tr>
 <td>外部舆论的硬数据入口：《绝区零》的差评都说了什么？（Steam 差评聚合，80.9 万播放 / 4,337 评论）</td>
-<td>BV1PitA6WEeu</td>
+<td><a href="https://www.bilibili.com/video/BV1PitA6WEeu/">BV1PitA6WEeu</a></td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 未深挖</td>
 </tr>
@@ -687,13 +703,13 @@ table.wide td{padding:9px 10px 9px 0}
 </tr>
 <tr>
 <td>玩家对「多坑」的自我察觉：「那些玩原神不跳剧情，甚至还多开几个小号，甚至一天同时玩 7-8 个二游的人…感觉比上班还累」</td>
-<td>BV1udYu6aEip 评论 205 赞/76 楼</td>
+<td><a href="https://www.bilibili.com/video/BV1udYu6aEip/">BV1udYu6aEip</a> 评论 205 赞/76 楼</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> 单一来源</td>
 </tr>
 <tr>
 <td>厂商侧确认「没有厂商的核心玩家可以做到把一家厂商的全部长线游戏全都玩下来」</td>
-<td>BV1udYu6aEip 字幕 03:04–03:13</td>
+<td><a href="https://www.bilibili.com/video/BV1udYu6aEip/">BV1udYu6aEip</a> 字幕 03:04–03:13</td>
 <td><span class="grade g-B" title="来源 B · 专业二手｜可用度 2 · 可参考">B2</span></td>
 <td><span class="cv cv-weak">⚠️</span> AI 字幕</td>
 </tr>
@@ -701,7 +717,7 @@ table.wide td{padding:9px 10px 9px 0}
 <td>供给侧出清的一手文书：《空灵诗篇》宣布 2026-11-16 中午 12:00 停止全平台运营</td>
 <td><a href="https://www.bilibili.com/video/BV14Mer6mEv6/">BV14Mer6mEv6</a> 简介原文</td>
 <td><span class="grade g-A" title="来源 A · 一手/权威｜可用度 2 · 可参考">A2</span></td>
-<td><span class="cv cv-strong">✅</span> 简介为官方公告原文；与第一轮「43 款停在 2026 上半年」（BV1e9KJ68EP2，未拉，数字待核）同向</td>
+<td><span class="cv cv-strong">✅</span> 简介为官方公告原文；与第一轮「43 款停在 2026 上半年」（<a href="https://www.bilibili.com/video/BV1e9KJ68EP2/">BV1e9KJ68EP2</a>，未拉，数字待核）同向</td>
 </tr>
 </tbody>
 </table></div>
@@ -768,17 +784,17 @@ table.wide td{padding:9px 10px 9px 0}
 </thead>
 <tbody>
 <tr>
-<td>厂商一手口径：「不刷社区，要建立用户画像与玩家生态的整体认知…把舆情风险扼杀在摇篮里」——<strong>不听评论，听画像</strong>（BV1cKbV6mEi5，本地 ASR）</td>
-<td>玩家侧期待：「二游想做大那官方就得有自己的坚持和傲气，什么都被社区牵着走到最后反倒两面不讨好」（BV1yqgN6UEoF，254 赞/50 楼）；「真要有意见，每个版本都有问卷…你直接弃游就完事了」（BV1cKbV6mEi5，26 赞）</td>
+<td>厂商一手口径：「不刷社区，要建立用户画像与玩家生态的整体认知…把舆情风险扼杀在摇篮里」——<strong>不听评论，听画像</strong>（<a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a>，本地 ASR）</td>
+<td>玩家侧期待：「二游想做大那官方就得有自己的坚持和傲气，什么都被社区牵着走到最后反倒两面不讨好」（<a href="https://www.bilibili.com/video/BV1yqgN6UEoF/">BV1yqgN6UEoF</a>，254 赞/50 楼）；「真要有意见，每个版本都有问卷…你直接弃游就完事了」（<a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a>，26 赞）</td>
 <td><span class="cv cv-weak">⚠️</span> <strong>三方不一致</strong>：厂商口头立场（不刷社区）、厂商实际动作（问卷）、玩家期待（要听但要筛选）各不相同。本轮不宣布哪一方成立——<strong>注意厂商的「不刷社区」与玩家的「别混社区」是两件不同的事，前者是数据策略，后者是参与选择</strong></td>
 </tr>
 <tr>
 <td>反方：厂商其实在听——「米哈游跟他的鬼才运营」；且实际动作是问卷而非评论</td>
-<td>反方：厂商不该听——「如果玩家说什么，游戏就做什么，变成听劝神游，那就离死不远了…不是说谁的声量大，就要听谁的」（BV1cKbV6mEi5，969 赞/33 楼）</td>
+<td>反方：厂商不该听——「如果玩家说什么，游戏就做什么，变成听劝神游，那就离死不远了…不是说谁的声量大，就要听谁的」（<a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a>，969 赞/33 楼）</td>
 <td><span class="cv cv-weak">⚠️</span> 964 赞与 969 赞两条高赞评论在同一视频内对撞，<strong>这本身是一个主战场型冲突</strong></td>
 </tr>
 <tr>
-<td>「我们社区对骂，关你游戏什么事？」（BV16cuHzeEw2，237 赞/5 楼）</td>
+<td>「我们社区对骂，关你游戏什么事？」（<a href="https://www.bilibili.com/video/BV16cuHzeEw2/">BV16cuHzeEw2</a>，237 赞/5 楼）</td>
 <td>「每个官方都希望玩家互撕」（同视频，565 赞/106 楼）</td>
 <td><span class="cv cv-weak">⚠️</span> 两句都是高赞，前者主张切割社区与游戏，后者主张社区内耗对厂商有利</td>
 </tr>
@@ -795,13 +811,13 @@ table.wide td{padding:9px 10px 9px 0}
 </thead>
 <tbody>
 <tr>
-<td>「变相涨价」「逼氪」：两个新卡池全放上半、压缩原始积累周期、拆分到命座和武器（BV1ymaP6BED8 字幕 <a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=256">04:16</a>–<a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=295">04:55</a>）；「等来的不是降价，而是变相涨价」（<a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=1289">21:29</a>–<a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=1297">21:37</a>）</td>
+<td>「变相涨价」「逼氪」：两个新卡池全放上半、压缩原始积累周期、拆分到命座和武器（<a href="https://www.bilibili.com/video/BV1ymaP6BED8/">BV1ymaP6BED8</a> 字幕 <a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=256">04:16</a>–<a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=295">04:55</a>）；「等来的不是降价，而是变相涨价」（<a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=1289">21:29</a>–<a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=1297">21:37</a>）</td>
 <td>「免费内容撑起规模」：无氪玩家能体验九成以上内容，付费梯度因此不平滑（39 赞/11 楼）；「大部分人压根没打算真充钱买一个完全体角色」（87 赞/38 楼）；「月卡 30 块，二游接近单机，性价比拉满」（64 赞/41 楼）</td>
 <td><span class="cv cv-weak">⚠️</span> <strong>基准不同</strong>：一方谈「买角色的成本」，另一方谈「玩内容的成本」。两者可同时成立，不构成事实矛盾，但<strong>玩家社区内部的「被宰感」主要来自前一基准</strong></td>
 </tr>
 <tr>
 <td>「二游玩家太闲了，天天闲的没事干」/「你在二游上班你还得给它氪金」</td>
-<td>「现在急需一款玩家不用玩就能获得情绪价值的游戏」（BV1udYu6aEip，130 赞/26 楼）</td>
+<td>「现在急需一款玩家不用玩就能获得情绪价值的游戏」（<a href="https://www.bilibili.com/video/BV1udYu6aEip/">BV1udYu6aEip</a>，130 赞/26 楼）</td>
 <td><span class="cv cv-weak">⚠️</span> 前者主张减负，后者主张去游戏化——方向不同</td>
 </tr>
 </tbody>
@@ -817,7 +833,7 @@ table.wide td{padding:9px 10px 9px 0}
 </thead>
 <tbody>
 <tr>
-<td>鸣潮方：画质、建模、演出明显更好；原神玩家是沉没成本 + 懒惰（「他们自己都骂原神垃圾，结果还一边骂一边吃策划给他喂的屎」）（BV16cuHzeEw2 辩论体，AI 角色）</td>
+<td>鸣潮方：画质、建模、演出明显更好；原神玩家是沉没成本 + 懒惰（「他们自己都骂原神垃圾，结果还一边骂一边吃策划给他喂的屎」）（<a href="https://www.bilibili.com/video/BV16cuHzeEw2/">BV16cuHzeEw2</a> 辩论体，AI 角色）</td>
 <td>原神方：真正让玩家留下的是剧情氛围感与整体塑造，「原神多多少少是治愈了很大一部分人的心灵的」（198 赞/210 楼）；「画质是后发优势」（同上）</td>
 <td><span class="cv cv-weak">⚠️</span> <strong>该视频本体是 AI 辩论体裁</strong>，双方发言由 AI 角色生成，<strong>不能当作任一方的真实立场样本</strong>；其价值在于「议题被摆成了什么形状」——即「流水能不能衡量质量」被立为对立轴</td>
 </tr>
@@ -849,7 +865,7 @@ table.wide td{padding:9px 10px 9px 0}
 </thead>
 <tbody>
 <tr>
-<td>「2026 年上半年国内二次元移动游戏市场实际营销收入为 132.69 亿元，同比下降 8.97%…主要原因仍然是部分头部长线产品流水下滑，而新品收入未能有效补位」（BV1ymaP6BED8 字幕 <a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=124">02:04</a>–<a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=145">02:25</a>）</td>
+<td>「2026 年上半年国内二次元移动游戏市场实际营销收入为 132.69 亿元，同比下降 8.97%…主要原因仍然是部分头部长线产品流水下滑，而新品收入未能有效补位」（<a href="https://www.bilibili.com/video/BV1ymaP6BED8/">BV1ymaP6BED8</a> 字幕 <a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=124">02:04</a>–<a href="https://www.bilibili.com/video/BV1ymaP6BED8/?t=145">02:25</a>）</td>
 <td>「更正一下 游戏市场整体是上升趋势 而且增速很快 所有游戏品类 只有二游市场再开倒车」（同视频评论 96 赞/9 楼）</td>
 <td><span class="cv cv-weak">⚠️</span> <strong>本轮在 B 站上未能找到第二个独立来源</strong>（用「2026上半年 二次元游戏市场 实际销售收入」检索 20 条，命中的是整体市场口径如「上半年游戏销售收入 1884.5 亿元」与第一轮已登记的停服潮视频）。故：数字降级为<strong>单一来源 + AI 字幕转述 + 建议回原片核对</strong>；评论区的反驳未获证实也未获驳倒，<strong>两边都列</strong></td>
 </tr>
@@ -866,8 +882,8 @@ table.wide td{padding:9px 10px 9px 0}
 </thead>
 <tbody>
 <tr>
-<td>「是我第一次看到有如此『恶臭』的讨论风气，充满这恶劣的用词、满满的嘲讽、负面的情绪、疯狂的拉踩、极端的情绪…（从终末地开始刷 B 站）」（BV1yqgN6UEoF，132 赞/15 楼）</td>
-<td>「其实很简单，开始只是一群真正意义上的恶心宅，为了满足自己的自卑和优越感…这是时代病因为中国人太缺自信了」（BV16cuHzeEw2，85 赞/14 楼）；米游社 2023-01 已有「长达一个多月的骂战」（BV14m4y1T7bx 字幕）</td>
+<td>「是我第一次看到有如此『恶臭』的讨论风气，充满这恶劣的用词、满满的嘲讽、负面的情绪、疯狂的拉踩、极端的情绪…（从终末地开始刷 B 站）」（<a href="https://www.bilibili.com/video/BV1yqgN6UEoF/">BV1yqgN6UEoF</a>，132 赞/15 楼）</td>
+<td>「其实很简单，开始只是一群真正意义上的恶心宅，为了满足自己的自卑和优越感…这是时代病因为中国人太缺自信了」（<a href="https://www.bilibili.com/video/BV16cuHzeEw2/">BV16cuHzeEw2</a>，85 赞/14 楼）；米游社 2023-01 已有「长达一个多月的骂战」（<a href="https://www.bilibili.com/video/BV14m4y1T7bx/">BV14m4y1T7bx</a> 字幕）</td>
 <td><span class="cv cv-weak">⚠️</span> <strong>基准不同</strong>：A 是新入场者的<strong>体感</strong>（入场时间点不同），B 是长期在场者的<strong>归因</strong>与历史对照。本轮倾向认为「变臭」更可能是<strong>入场体感 + 平台错配</strong>的叠加，而不是社区绝对恶化——但这属于判断，证据仅到「米游社 2023 年已有同级骂战」这一步，<strong>未达可证实水平</strong></td>
 </tr>
 </tbody>
@@ -900,7 +916,7 @@ table.wide td{padding:9px 10px 9px 0}
 <td>绝区零社区的<strong>深度</strong>样本</td>
 <td><span class="gap gap-search">检索未覆盖</span></td>
 <td>本轮仅探针命中 2 条相关（外网热议 + Steam 差评），广扫被「绝区零」标签 floods 淹没</td>
-<td>换限定词（如「绝区零 圈外」「绝区零 玩家 刻板印象」）再补一轮 <code>search_videos</code>；或直接深挖 BV1PitA6WEeu（4,337 评论）与 BV1K2PFejEhk</td>
+<td>换限定词（如「绝区零 圈外」「绝区零 玩家 刻板印象」）再补一轮 <code>search_videos</code>；或直接深挖 <a href="https://www.bilibili.com/video/BV1PitA6WEeu/">BV1PitA6WEeu</a>（4,337 评论）与 <a href="https://www.bilibili.com/video/BV1K2PFejEhk/">BV1K2PFejEhk</a></td>
 </tr>
 <tr>
 <td>终末地社区 2026 年现状</td>
@@ -917,11 +933,11 @@ table.wide td{padding:9px 10px 9px 0}
 <tr>
 <td>米哈游校招宣讲<strong>完整版</strong></td>
 <td>工具/预算限制</td>
-<td>本轮取到的是 2 分钟切片（BV1cKbV6mEi5），与官方完整宣讲（BV15xbK6DEBC「货币战争」运营视角全公开，52.2 万播放）未做对照</td>
-<td>深挖 BV15xbK6DEBC，并与切片逐条对照，核验「断章取义警告」的自称是否成立</td>
+<td>本轮取到的是 2 分钟切片（<a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a>），与官方完整宣讲（<a href="https://www.bilibili.com/video/BV15xbK6DEBC/">BV15xbK6DEBC</a>「货币战争」运营视角全公开，52.2 万播放）未做对照</td>
+<td>深挖 <a href="https://www.bilibili.com/video/BV15xbK6DEBC/">BV15xbK6DEBC</a>，并与切片逐条对照，核验「断章取义警告」的自称是否成立</td>
 </tr>
 <tr>
-<td>BV1uebL6TESo 的<strong>作者原话</strong>（40 金测算方法）</td>
+<td><a href="https://www.bilibili.com/video/BV1uebL6TESo/">BV1uebL6TESo</a> 的<strong>作者原话</strong>（40 金测算方法）</td>
 <td><strong>工具限制</strong></td>
 <td><code>get_transcript</code> 的 <code>query</code> 参数用空格分隔的多词（如「退坑 回坑 40金 体力 抽卡 成本」）返回 <strong>0 行</strong>（<code>n_returned=0</code>，<code>n_total_lines=387</code>）——该参数是<strong>字面匹配</strong>，多词空格串失配</td>
 <td>改用单词或短词组重查；或 <code>head_ratio</code> 分段读</td>
@@ -952,7 +968,7 @@ table.wide td{padding:9px 10px 9px 0}
 <li><strong>补三族检索</strong>：终末地 / 绝区零 / 乙游 各换限定词扫一次（<code>search_videos</code> 3 次），把上表三项「<span class="gap gap-search">检索未覆盖</span>」变成已覆盖。</li>
 <li><strong>核验唯一硬数字</strong>：132.69 亿元 / -8.97% 目前只有单一转述。它不是检索没做好，是<strong><span class="gap gap-struct">结构性边界</span></strong>——去伽马数据、Sensor Tower 原文或厂商投资者关系页，不要继续在 B 站搜。</li>
 <li><strong>读楼中楼</strong>：对 3–5 条高争议簇改用 <code>detail="full"</code>。本轮争议度最高的 690 楼与 278 楼没读，而那是唯一能验证「互撕是否真的发生」的一手材料。</li>
-<li><strong>补一条漏掉的作者原话</strong>：BV1uebL6TESo 的 40 金测算，<code>get_transcript(query="40金")</code> 单词重查即可（多词空格串失配已记入工具坑）。</li>
+<li><strong>补一条漏掉的作者原话</strong>：<a href="https://www.bilibili.com/video/BV1uebL6TESo/">BV1uebL6TESo</a> 的 40 金测算，<code>get_transcript(query="40金")</code> 单词重查即可（多词空格串失配已记入工具坑）。</li>
 </ol>
 <h2>五、检索范围与偏差声明</h2>
 <blockquote>
@@ -986,31 +1002,31 @@ table.wide td{padding:9px 10px 9px 0}
 <td>退出与回流</td>
 <td>二游 退坑 / 原神 回坑 / 二次元 弃游</td>
 <td>60 / 60 / 60</td>
-<td><span class="cv cv-strong">✅</span> 有效（BV1uebL6TESo、BV1VgHrzVEWm）</td>
+<td><span class="cv cv-strong">✅</span> 有效（<a href="https://www.bilibili.com/video/BV1uebL6TESo/">BV1uebL6TESo</a>、<a href="https://www.bilibili.com/video/BV1VgHrzVEWm/">BV1VgHrzVEWm</a>）</td>
 </tr>
 <tr>
 <td>玩家分层与强度话语</td>
 <td>强度党 二游 / 厨子 角色 / 二游 保底 歪</td>
 <td>60 / 60 / 60</td>
-<td><span class="cv cv-weak">⚠️</span> 「厨子 角色」被角色赏析视频占满；补检后由 BV12Zak6LEhN 补上</td>
+<td><span class="cv cv-weak">⚠️</span> 「厨子 角色」被角色赏析视频占满；补检后由 <a href="https://www.bilibili.com/video/BV12Zak6LEhN/">BV12Zak6LEhN</a> 补上</td>
 </tr>
 <tr>
 <td>外部舆论与审美定义权</td>
 <td>二游 媚宅 / 游戏 高级审美 / 二次元 玩家 抵制</td>
 <td>60 / 60 / 60</td>
-<td><span class="cv cv-weak">⚠️</span> 串扰到 DeepSeek/大肥鱼 AI 账号议题（探针 3：20 条里 6 条串入）；排除后仍挖出 BV1Vbh869EGg</td>
+<td><span class="cv cv-weak">⚠️</span> 串扰到 DeepSeek/大肥鱼 AI 账号议题（探针 3：20 条里 6 条串入）；排除后仍挖出 <a href="https://www.bilibili.com/video/BV1Vbh869EGg/">BV1Vbh869EGg</a></td>
 </tr>
 <tr>
 <td>品类与市场结构</td>
 <td>二游 大逃杀 / 二次元 游戏 停服 / 二游 逼氪</td>
 <td>60 / 60 / 60</td>
-<td><span class="cv cv-strong">✅</span> 有效（BV1ymaP6BED8、BV1YJnN64ERG、BV14Mer6mEv6）</td>
+<td><span class="cv cv-strong">✅</span> 有效（<a href="https://www.bilibili.com/video/BV1ymaP6BED8/">BV1ymaP6BED8</a>、<a href="https://www.bilibili.com/video/BV1YJnN64ERG/">BV1YJnN64ERG</a>、<a href="https://www.bilibili.com/video/BV14Mer6mEv6/">BV14Mer6mEv6</a>）</td>
 </tr>
 <tr>
 <td>厂商与从业者视角</td>
 <td>游戏 社区运营 / 二游 制作人 / 游戏策划 玩家沟通</td>
 <td>30 / 30 / 30（Scan B）</td>
-<td><span class="cv cv-strong">✅</span> 有效（BV1cKbV6mEi5、BV15xbK6DEBC）——<strong>第一轮完全缺失的一族</strong></td>
+<td><span class="cv cv-strong">✅</span> 有效（<a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a>、<a href="https://www.bilibili.com/video/BV15xbK6DEBC/">BV15xbK6DEBC</a>）——<strong>第一轮完全缺失的一族</strong></td>
 </tr>
 <tr>
 <td>玩家圈层与入坑</td>
@@ -1034,7 +1050,7 @@ table.wide td{padding:9px 10px 9px 0}
 <td>供给侧与新游</td>
 <td>异环 二游 / 蓝色星原 二游 / 绿梦 二游</td>
 <td>30 / 30 / 30</td>
-<td><span class="cv cv-strong">✅</span> 有效（BV1yqgN6UEoF、BV1WEJX6zEUM）</td>
+<td><span class="cv cv-strong">✅</span> 有效（<a href="https://www.bilibili.com/video/BV1yqgN6UEoF/">BV1yqgN6UEoF</a>、<a href="https://www.bilibili.com/video/BV1WEJX6zEUM/">BV1WEJX6zEUM</a>）</td>
 </tr>
 </tbody>
 </table></div>
@@ -1090,7 +1106,7 @@ table.wide td{padding:9px 10px 9px 0}
 </tr>
 <tr>
 <td>补 ASR</td>
-<td><strong>1</strong>（BV1cKbV6mEi5，原生无字幕）</td>
+<td><strong>1</strong>（<a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a>，原生无字幕）</td>
 <td><code>transcribe_audio</code>，engine=外部命令</td>
 </tr>
 <tr>
@@ -1108,11 +1124,11 @@ table.wide td{padding:9px 10px 9px 0}
 <p><span class="cv cv-weak">⚠️</span> <strong><code>unique_candidates</code> 与 <code>returned</code> 严重不等</strong>：两轮合计约 1,359 条候选未进入候选表。本轮用 3 次定向 <code>search_videos</code> + 2 次探针做补检（并以此挖出「米游社社区事件」「绝区零差评」「高级审美」三条第一轮零覆盖的高价值条目），但<strong>补检不能替代全量扫描</strong>：尾部仍有未取到的条目。</p>
 <p><span class="cv cv-weak">⚠️</span> <strong>排序来自 B 站算法，非随机抽样</strong>：
 - 高播放内容被系统性高估（播放量与可信度无关）
-- 冷门但硬核的内容系统性低估 —— 本轮的 BV1Vbh869EGg（6,077 播放 / 221 评论）与 BV15jttzWE5S（2,105 播放 / 31 评论）都是被低估的高密度样本，<strong>均靠定向补检捞回</strong>
+- 冷门但硬核的内容系统性低估 —— 本轮的 <a href="https://www.bilibili.com/video/BV1Vbh869EGg/">BV1Vbh869EGg</a>（6,077 播放 / 221 评论）与 <a href="https://www.bilibili.com/video/BV15jttzWE5S/">BV15jttzWE5S</a>（2,105 播放 / 31 评论）都是被低估的高密度样本，<strong>均靠定向补检捞回</strong>
 - 算法偏好新内容，早期但更准确的分析可能未入围
 - <strong>本轮新增偏差</strong>：B 站搜索对多词查询是<strong>模糊/OR 匹配</strong>，长限定词会被游戏 tag 淹没 —— 实测一条纯 XP 赏析视频命中 <strong>6 个族 / 16 个关键词</strong>并排到 Scan A 第 1 名。<strong><code>families</code> 排序键（不同族数 → 族内命中数 → 播放量）在标签 floods 下会失效，必须靠人工分诊兜底。</strong></p>
 <hr />
-<p><strong>单轮开销</strong>：上游调用 84 次（Scan A 48 + Scan B 36，逐次 <code>cost.calls</code> 累加）｜评论取样 727 条顶层｜转写 1 条（BV1cKbV6mEi5，原生无字幕）｜输出估算<strong>不可复算</strong>——调用账本 2026-10-22 才上线，本次运行没有逐次记录。</p>
+<p><strong>单轮开销</strong>：上游调用 84 次（Scan A 48 + Scan B 36，逐次 <code>cost.calls</code> 累加）｜评论取样 727 条顶层｜转写 1 条（<a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a>，原生无字幕）｜输出估算<strong>不可复算</strong>——调用账本 2026-10-22 才上线，本次运行没有逐次记录。</p>
 <h2>六、信源地图</h2>
 <blockquote>
 <p>本节同时是<strong>可追溯清单</strong>：每一行都带 BV 直链与评级，不再单列一节。</p>
@@ -1120,7 +1136,7 @@ table.wide td{padding:9px 10px 9px 0}
 <p><strong>评级说明</strong>：来源 A–F（可靠性）× 可用度 1–4（对本议题的有用程度）。冗余度：原创源 / 冗余源 / 冲突源。</p>
 <h3>6.1 深挖对象（9 条，全部做过 L2 双路：字幕侧 + 评论区侧）</h3>
 <div class="tw"><table class="wide">
-<thead>
+<colgroup><col style="width:3.08%"><col style="width:11.03%"><col><col style="width:8.97%"><col style="width:5.13%"><col style="width:6.67%"><col style="width:5.64%"><col style="width:6.92%"><col style="width:21.79%"></colgroup><thead>
 <tr>
 <th>#</th>
 <th>BV</th>
@@ -1237,7 +1253,7 @@ table.wide td{padding:9px 10px 9px 0}
 </table></div>
 <h3>6.2 入选但未深挖（重要候选）</h3>
 <div class="tw"><table class="wide">
-<thead>
+<colgroup><col style="width:3.08%"><col style="width:11.03%"><col><col style="width:8.97%"><col style="width:5.13%"><col style="width:6.67%"><col style="width:5.64%"><col style="width:6.92%"><col style="width:21.79%"></colgroup><thead>
 <tr>
 <th>#</th>
 <th>BV</th>
@@ -1455,55 +1471,55 @@ table.wide td{padding:9px 10px 9px 0}
 <td>T1</td>
 <td>纯攻略/教学/工具/抽卡记录</td>
 <td>38</td>
-<td>BV1N4Ji6FEmV, BV1iqJR6NEss, BV1T3WF6uEnC, BV1FEn36pE2s, BV1ksaH67EXh, BV1jkhM6vESJ, BV1nopc6YEsr, BV1HJJD6cEQL, BV13vpG67Enr, BV1BSau6kEXY …</td>
+<td><a href="https://www.bilibili.com/video/BV1N4Ji6FEmV/">BV1N4Ji6FEmV</a>, <a href="https://www.bilibili.com/video/BV1iqJR6NEss/">BV1iqJR6NEss</a>, <a href="https://www.bilibili.com/video/BV1T3WF6uEnC/">BV1T3WF6uEnC</a>, <a href="https://www.bilibili.com/video/BV1FEn36pE2s/">BV1FEn36pE2s</a>, <a href="https://www.bilibili.com/video/BV1ksaH67EXh/">BV1ksaH67EXh</a>, <a href="https://www.bilibili.com/video/BV1jkhM6vESJ/">BV1jkhM6vESJ</a>, <a href="https://www.bilibili.com/video/BV1nopc6YEsr/">BV1nopc6YEsr</a>, <a href="https://www.bilibili.com/video/BV1HJJD6cEQL/">BV1HJJD6cEQL</a>, <a href="https://www.bilibili.com/video/BV13vpG67Enr/">BV13vpG67Enr</a>, <a href="https://www.bilibili.com/video/BV1BSau6kEXY/">BV1BSau6kEXY</a> …</td>
 </tr>
 <tr>
 <td>T2</td>
 <td>纯角色展示/时装/剪辑/MAD/二创，无社区讨论成分</td>
 <td>41</td>
-<td>BV1uznn6fELX, BV1c169BXE2b, BV1uo6iBHESv, BV11Ejp6jE3w, BV1KoJR6HER1, BV1zuJ96vEPd, BV1Vtq… , BV1j8JD6WEbC, BV1R8nF65Eme, BV1SknF6KE5g, BV1NsnM6DEz5 …</td>
+<td><a href="https://www.bilibili.com/video/BV1uznn6fELX/">BV1uznn6fELX</a>, <a href="https://www.bilibili.com/video/BV1c169BXE2b/">BV1c169BXE2b</a>, <a href="https://www.bilibili.com/video/BV1uo6iBHESv/">BV1uo6iBHESv</a>, <a href="https://www.bilibili.com/video/BV11Ejp6jE3w/">BV11Ejp6jE3w</a>, <a href="https://www.bilibili.com/video/BV1KoJR6HER1/">BV1KoJR6HER1</a>, <a href="https://www.bilibili.com/video/BV1zuJ96vEPd/">BV1zuJ96vEPd</a>, BV1Vtq… , <a href="https://www.bilibili.com/video/BV1j8JD6WEbC/">BV1j8JD6WEbC</a>, <a href="https://www.bilibili.com/video/BV1R8nF65Eme/">BV1R8nF65Eme</a>, <a href="https://www.bilibili.com/video/BV1SknF6KE5g/">BV1SknF6KE5g</a>, <a href="https://www.bilibili.com/video/BV1NsnM6DEz5/">BV1NsnM6DEz5</a> …</td>
 </tr>
 <tr>
 <td>T3</td>
 <td>二次元 IP 梗/表情包/梗百科（可作情绪样本，不进证据）</td>
 <td>9</td>
-<td>BV17w4m1r7hp, BV1zjp966ENp, BV1f53L6MEVb, BV1Be2bYKE9g, BV1kjFMzCE8e, BV1ooe26JEeF, BV1mgHd6bEDj, BV1VwpE6PEx9, BV1K2doBCE4N</td>
+<td><a href="https://www.bilibili.com/video/BV17w4m1r7hp/">BV17w4m1r7hp</a>, <a href="https://www.bilibili.com/video/BV1zjp966ENp/">BV1zjp966ENp</a>, <a href="https://www.bilibili.com/video/BV1f53L6MEVb/">BV1f53L6MEVb</a>, <a href="https://www.bilibili.com/video/BV1Be2bYKE9g/">BV1Be2bYKE9g</a>, <a href="https://www.bilibili.com/video/BV1kjFMzCE8e/">BV1kjFMzCE8e</a>, <a href="https://www.bilibili.com/video/BV1ooe26JEeF/">BV1ooe26JEeF</a>, <a href="https://www.bilibili.com/video/BV1mgHd6bEDj/">BV1mgHd6bEDj</a>, <a href="https://www.bilibili.com/video/BV1VwpE6PEx9/">BV1VwpE6PEx9</a>, <a href="https://www.bilibili.com/video/BV1K2doBCE4N/">BV1K2doBCE4N</a></td>
 </tr>
 <tr>
 <td>T4</td>
 <td>与二游玩家群体无关（AI 账号运营 / DeepSeek / 大肥鱼 / iPhone / 求职）</td>
 <td>12</td>
-<td>BV1kYYF6xE6r, BV1ZEp96uE83, BV1icay6AEV2, BV14oad6WEos, BV1dC75zcERp, BV1QD8szJEGe, BV1R9YLzTEMR, BV1SebKzsEa6, BV1bV411T7ha, BV1bnLwzrEHS, BV1Drn36iEGJ, BV15jttzWE5S(重叠)</td>
+<td><a href="https://www.bilibili.com/video/BV1kYYF6xE6r/">BV1kYYF6xE6r</a>, <a href="https://www.bilibili.com/video/BV1ZEp96uE83/">BV1ZEp96uE83</a>, <a href="https://www.bilibili.com/video/BV1icay6AEV2/">BV1icay6AEV2</a>, <a href="https://www.bilibili.com/video/BV14oad6WEos/">BV14oad6WEos</a>, <a href="https://www.bilibili.com/video/BV1dC75zcERp/">BV1dC75zcERp</a>, <a href="https://www.bilibili.com/video/BV1QD8szJEGe/">BV1QD8szJEGe</a>, <a href="https://www.bilibili.com/video/BV1R9YLzTEMR/">BV1R9YLzTEMR</a>, <a href="https://www.bilibili.com/video/BV1SebKzsEa6/">BV1SebKzsEa6</a>, <a href="https://www.bilibili.com/video/BV1bV411T7ha/">BV1bV411T7ha</a>, <a href="https://www.bilibili.com/video/BV1bnLwzrEHS/">BV1bnLwzrEHS</a>, <a href="https://www.bilibili.com/video/BV1Drn36iEGJ/">BV1Drn36iEGJ</a>, <a href="https://www.bilibili.com/video/BV15jttzWE5S/">BV15jttzWE5S</a>(重叠)</td>
 </tr>
 <tr>
 <td>T5</td>
 <td>番剧/galgame/影宅/非游戏向二次元</td>
 <td>8</td>
-<td>BV1ay4y1a7B2, BV1PNaDesE9E, BV1rmN3eMEz4, BV1uJYVzXEHU, BV1mdTY6bELg, BV1vR4y1L7yv, BV1ZeMEznE17, BV1SSg664EJT</td>
+<td><a href="https://www.bilibili.com/video/BV1ay4y1a7B2/">BV1ay4y1a7B2</a>, <a href="https://www.bilibili.com/video/BV1PNaDesE9E/">BV1PNaDesE9E</a>, <a href="https://www.bilibili.com/video/BV1rmN3eMEz4/">BV1rmN3eMEz4</a>, <a href="https://www.bilibili.com/video/BV1uJYVzXEHU/">BV1uJYVzXEHU</a>, <a href="https://www.bilibili.com/video/BV1mdTY6bELg/">BV1mdTY6bELg</a>, <a href="https://www.bilibili.com/video/BV1vR4y1L7yv/">BV1vR4y1L7yv</a>, <a href="https://www.bilibili.com/video/BV1ZeMEznE17/">BV1ZeMEznE17</a>, <a href="https://www.bilibili.com/video/BV1SSg664EJT/">BV1SSg664EJT</a></td>
 </tr>
 <tr>
 <td>T6</td>
 <td>与另一议题（AI Agent 自主学习）串扰</td>
 <td>5</td>
-<td>BV1kYYF6xE6r, BV1bFw9e8ECp, BV1objR6fEdZ, BV1ZEp96uE83, BV1icay6AEV2</td>
+<td><a href="https://www.bilibili.com/video/BV1kYYF6xE6r/">BV1kYYF6xE6r</a>, <a href="https://www.bilibili.com/video/BV1bFw9e8ECp/">BV1bFw9e8ECp</a>, <a href="https://www.bilibili.com/video/BV1objR6fEdZ/">BV1objR6fEdZ</a>, <a href="https://www.bilibili.com/video/BV1ZEp96uE83/">BV1ZEp96uE83</a>, <a href="https://www.bilibili.com/video/BV1icay6AEV2/">BV1icay6AEV2</a></td>
 </tr>
 <tr>
 <td>T7</td>
 <td>冗余源（与已深挖对象主张重合，无信息增量）</td>
 <td>14</td>
-<td>BV1sco4BdE8s(第一轮已登记), BV1VgHrzVEWm(部分), BV1Rteq6EEWZ, BV1tWng6FE2Q, BV1Drnw6yEcj, BV1Qong6iEWD, BV1kYYF6xE6r, BV1D7Hz6SER7, BV1XCw1zqEAu, BV1hdpC6PEiL, BV1t2to6LEvJ, BV1rq… , BV1yDn368ECR, BV1Vtq…</td>
+<td><a href="https://www.bilibili.com/video/BV1sco4BdE8s/">BV1sco4BdE8s</a>(第一轮已登记), <a href="https://www.bilibili.com/video/BV1VgHrzVEWm/">BV1VgHrzVEWm</a>(部分), <a href="https://www.bilibili.com/video/BV1Rteq6EEWZ/">BV1Rteq6EEWZ</a>, <a href="https://www.bilibili.com/video/BV1tWng6FE2Q/">BV1tWng6FE2Q</a>, <a href="https://www.bilibili.com/video/BV1Drnw6yEcj/">BV1Drnw6yEcj</a>, <a href="https://www.bilibili.com/video/BV1Qong6iEWD/">BV1Qong6iEWD</a>, <a href="https://www.bilibili.com/video/BV1kYYF6xE6r/">BV1kYYF6xE6r</a>, <a href="https://www.bilibili.com/video/BV1D7Hz6SER7/">BV1D7Hz6SER7</a>, <a href="https://www.bilibili.com/video/BV1XCw1zqEAu/">BV1XCw1zqEAu</a>, <a href="https://www.bilibili.com/video/BV1hdpC6PEiL/">BV1hdpC6PEiL</a>, <a href="https://www.bilibili.com/video/BV1t2to6LEvJ/">BV1t2to6LEvJ</a>, BV1rq… , <a href="https://www.bilibili.com/video/BV1yDn368ECR/">BV1yDn368ECR</a>, BV1Vtq…</td>
 </tr>
 <tr>
 <td>T8</td>
 <td>非社区向（纯音乐/运动/生活记录）</td>
 <td>7</td>
-<td>BV1NS… , BV15ZguGziEoE, BV15VaD6EEm8, BV1PsnM6DEgW, BV1MDTk69EL3, BV1D4pK6tEXm, BV1v5aT6ZEvc</td>
+<td>BV1NS… , BV15ZguGziEoE, <a href="https://www.bilibili.com/video/BV15VaD6EEm8/">BV15VaD6EEm8</a>, <a href="https://www.bilibili.com/video/BV1PsnM6DEgW/">BV1PsnM6DEgW</a>, <a href="https://www.bilibili.com/video/BV1MDTk69EL3/">BV1MDTk69EL3</a>, <a href="https://www.bilibili.com/video/BV1D4pK6tEXm/">BV1D4pK6tEXm</a>, <a href="https://www.bilibili.com/video/BV1v5aT6ZEvc/">BV1v5aT6ZEvc</a></td>
 </tr>
 <tr>
 <td>T9</td>
 <td>纯广告/引流/软广（含同名 tag 但内容无关）</td>
 <td>6</td>
-<td>BV1tQpN6pERN, BV15Hpb6wEvS, BV1RsHi67E7C, BV1Eupb6uEit, BV1oKAUzWEQs, BV1rCnv6pEEx</td>
+<td><a href="https://www.bilibili.com/video/BV1tQpN6pERN/">BV1tQpN6pERN</a>, <a href="https://www.bilibili.com/video/BV15Hpb6wEvS/">BV15Hpb6wEvS</a>, <a href="https://www.bilibili.com/video/BV1RsHi67E7C/">BV1RsHi67E7C</a>, <a href="https://www.bilibili.com/video/BV1Eupb6uEit/">BV1Eupb6uEit</a>, <a href="https://www.bilibili.com/video/BV1oKAUzWEQs/">BV1oKAUzWEQs</a>, <a href="https://www.bilibili.com/video/BV1rCnv6pEEx/">BV1rCnv6pEEx</a></td>
 </tr>
 </tbody>
 </table></div>
@@ -1548,7 +1564,7 @@ table.wide td{padding:9px 10px 9px 0}
 <tr>
 <td>深挖缺口</td>
 <td>5 条候选无字幕；<code>transcribe_audio</code> 一次没被调用</td>
-<td><strong>本轮补 1 条 ASR</strong>（BV1cKbV6mEi5），并把「无字幕不是淘汰理由」从规范变成执行</td>
+<td><strong>本轮补 1 条 ASR</strong>（<a href="https://www.bilibili.com/video/BV1cKbV6mEi5/">BV1cKbV6mEi5</a>），并把「无字幕不是淘汰理由」从规范变成执行</td>
 </tr>
 <tr>
 <td>图片纪律</td>

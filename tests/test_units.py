@@ -1139,7 +1139,9 @@ def test_briefing_render_masthead_badges_and_overview(tmp_path):
     p.write_text(MD_OK, encoding="utf-8")
     html = pathlib.Path(rb.render(str(p), str(tmp_path / "t.html"))).read_text(encoding="utf-8")
 
-    assert "<h1>测试议题 · B站信息深入报告</h1>" in html, "报头标题没被摘出来"
+    # 标题行现在带 `style="--h1:..px"`（字号按标题长度自适应，见 h1_size），
+    # 所以不能再用 `<h1>` 精确匹配——断言标签在内、标题文本在内。
+    assert "<h1 " in html and "测试议题 · B站信息深入报告</h1>" in html, "报头标题没被摘出来"
     assert 'class="meta"' in html and "检索日期" in html, "元信息没被转成 meta"
     assert "grade g-B" in html and "grade g-C" in html, "评级徽章缺失"
     assert "cv cv-strong" in html and "cv cv-weak" in html, "交叉验证徽章缺失"
@@ -1257,9 +1259,143 @@ def test_report_paths_follow_naming_rule(tmp_path, monkeypatch):
     p = reports.paths("主流二游社区", "deep", "2026-10-22", mkdir=True)
     assert pathlib.Path(p["dir"]).name == "20261022-深入分析-主流二游社区"
     assert pathlib.Path(p["md"]).name == "主流二游社区·B站信息深入报告.md"
-    assert p["title"] == "主流二游社区 · B站信息深入报告"
+    # 标题只写议题名：模式由**文件名 + 报头 kicker**承载（2026-10-29）。
+    # 以前这里断言的是「主流二游社区 · B站信息深入报告」，那个后缀会让长议题换行、
+    # 右端与正文对不齐（见 references/CHANGELOG.md 的 v1.1.1 条）。
+    assert p["title"] == "主流二游社区"
     assert pathlib.Path(p["dir"]).is_dir(), "mkdir=True 必须真的建目录"
     assert pathlib.Path(p["html"]).stem == pathlib.Path(p["md"]).stem
+
+
+def test_doc_title_carries_no_mode_suffix():
+    """一级标题只写议题名（2026-10-29）。
+
+    为什么值得单独一条：标题后缀看着无害，但它把标题撑长 8–10 个字。
+    40px 下长议题（如「电脑三大件价格行情的大众态度及近六个月变化」）必然换行，
+    而换行后两行右侧的留白远大于正文 ⇒ 读者看到"标题比内容窄、内容提前换行"。
+    这是**版式问题**，只能在 `doc_title` 这个唯一出口上守住。
+    """
+    from big import reports
+    assert reports.doc_title("主流二游社区", "deep") == "主流二游社区"
+    assert reports.doc_title("主流二游社区", "brief") == "主流二游社区"
+    assert "B站信息" not in reports.doc_title("某议题", "deep")
+    # 轮次标记是议题的一部分，不能被当成模式后缀吃掉
+    assert reports.doc_title("二游超人气角色分析（第二轮）", "deep") == "二游超人气角色分析（第二轮）"
+    # 不参与拼标题 ≠ 不校验：非法档位仍要在入口炸掉
+    with pytest.raises(ValueError):
+        reports.doc_title("X", "随便")
+
+
+def test_h1_size_keeps_long_titles_on_one_line():
+    """标题字号自适应：长议题降字号，目标是 780px 正文宽里**一行放得下**。
+
+    判据用「估算显示宽度 × 0.985 ≤ 780」，不断言具体 px——具体值随字体度量变，
+    但"放得下"是版面契约。0.985 补的是 `letter-spacing:-.015em`。
+    """
+    rb = _rb()
+    cases = ["社保催缴争议",
+             "社区对AI模型娘化与各类二创的热衷",
+             "如何让AI Agent自己在B站中畅游并学习",
+             "电脑三大件价格行情的大众态度及近六个月变化"]
+    for t in cases:
+        size = rb.h1_size(t)
+        assert 26 <= size <= 40, f"{t}: 字号 {size} 超出 26–40 区间"
+        width = sum(0.55 if ord(c) < 128 else 1.0 for c in t) * size * 0.985
+        assert width <= 780, f"{t}: 估算宽度 {width:.0f}px 超过正文宽 780px"
+    sizes = [rb.h1_size(t) for t in cases]
+    assert sizes == sorted(sizes, reverse=True), f"字号没有随标题长度单调下降：{sizes}"
+
+
+def test_plain_and_long_cells_skip_evidence_lists():
+    """字数检查要能分清「段落塞进格子」与「证据清单」。
+
+    证据清单（一串 BV + 时间戳）长是应该的：它承载的是可核对性。
+    2026-10-29 实测：8 个 >150 字的单元格里 6 个是清单，按长度一刀切会误报 75%。
+    """
+    rb = _rb()
+    long_text = "这是一段很长的解释，把一个判断硬塞进了来源列，" * 4
+    evidence = "BV1xx411c7mD @03:12 ｜ BV1yy411c7mE 评论 119 赞 ｜ BV1zz411c7mF @00:45"
+    assert rb._is_evidence_list(evidence) is True
+    assert rb._is_evidence_list("BV1xx411c7mD 单条 + " + long_text) is False
+
+    md = f"| 事实 | 来源 |\n|---|---|\n| {long_text} | {evidence} |\n"
+    hits = rb._long_cells(md)
+    assert len(hits) == 1, f"应只报段落那一格，实际报了 {len(hits)} 格"
+
+
+def test_plain_strips_markdown_noise():
+    """统计字数前要去掉 `**`、反引号与链接 URL——否则"结论是不是太长"会虚高。"""
+    rb = _rb()
+    s = ("**粗体** 与 `代码` 和 "
+         "[BV1xx411c7mD 评论 2315赞](https://www.bilibili.com/video/BV1xx411c7mD/)")
+    out = rb._plain(s)
+    assert "*" not in out and "`" not in out
+    assert "https://" not in out and "BV1xx411c7mD" in out
+
+
+def test_source_map_numbers_detects_dup_and_gap():
+    """编号必须 1..N 连续且唯一——重号或跳号都会让正文「#5」指代不唯一。"""
+    rb = _rb()
+    dup_md = "## 六、信源地图\n\n| # | BV |\n|---|---|\n| 1 | a |\n| 2 | b |\n| 1 | c |\n"
+    dup, _ = rb._source_map_numbers(dup_md)
+    assert dup == [1], dup
+
+    gap_md = "## 六、信源地图\n\n| # | BV |\n|---|---|\n| 1 | a |\n| 3 | b |\n"
+    dup2, miss2 = rb._source_map_numbers(gap_md)
+    assert dup2 == [] and miss2 == [2], (dup2, miss2)
+
+    # 旧版报告（信源地图在 §二）不检查，避免拿新标准判旧产物
+    assert rb._source_map_numbers("## 二、信源地图\n| 1 | a |\n") == ([], [])
+
+
+def test_link_bv_wraps_bare_ids_only():
+    """裸 BV 自动成链接，但**不能**把已有 <a> 再包一层（会产生嵌套锚点）。"""
+    rb = _rb()
+    html = ('<p>见 BV1xx411c7mD 与 '
+            '<a href="https://www.bilibili.com/video/BV1yy411c7mE/?t=192">BV1yy411c7mE @03:12</a></p>')
+    out = rb.link_bv(html)
+    assert out.count("<a ") == 2, out
+    assert '<a href="https://www.bilibili.com/video/BV1xx411c7mD/">BV1xx411c7mD</a>' in out
+    assert out.count("BV1yy411c7mE") == 2, "已有链接被重复处理了"
+
+
+def test_legend_goes_after_conclusions():
+    """读图口径必须落在 §一 之后、§二 之前。
+
+    第一版把它插在**第一个** h2 前（= 「一、结论」前面），等于没挪——
+    代码上看是"插在第一个 h2 之前"，很容易写错，截图一眼就能看出来。
+    """
+    rb = _rb()
+    body = "<h2>一、结论</h2><p>判断</p><h2>二、发现</h2><p>表</p>"
+    out = rb._insert_before_second_h2("<div class='legend'></div>", body)
+    assert out.index("判断") < out.index("legend") < out.index("二、发现"), out
+
+
+def test_colgroup_falls_back_when_headers_unknown():
+    """列名全不认识时也必须给 colgroup。
+
+    因为调用方给表加了 `table-layout:fixed`——没有列宽的 fixed 表会变成
+    **所有列等宽**。2026-10-29 实测：中土那张「视频 / 总评论 / 围观·玩梗 / …」
+    被 7 等分成 111px，视频标题比自动布局时还窄。
+    """
+    rb = _rb()
+    headers = ["视频", "总评论", "围观/玩梗", "支持对线", "知识/史料", "降温/反思", "机制自省"]
+    out = rb._colgroup(headers)
+    assert out.startswith("<colgroup>") and out.endswith("</colgroup>")
+    widths = [float(x) for x in re.findall(r"width:([\d.]+)%", out)]
+    assert len(widths) == len(headers), widths
+    assert widths[0] > widths[1], "第 1 列是主体（视频/标题），必须比数值列宽"
+    assert sum(widths) <= 100, f"列宽合计 {sum(widths)}% 超过 100%"
+
+
+def test_colgroup_uses_known_headers():
+    """信源地图 9 列：认识的列按表宽表给，认不出的（标题）吃掉剩余。"""
+    rb = _rb()
+    headers = ["#", "BV", "标题", "UP 主", "评级", "冗余度", "时长", "发布", "一句话定性"]
+    out = rb._colgroup(headers)
+    widths = [float(x) for x in re.findall(r"width:([\d.]+)%", out)]
+    assert len(widths) == 8, "标题列应为 auto（无 width），其余 8 列有宽度"
+    assert sum(widths) < 100, "必须给标题列留出剩余宽度"
 
 
 def test_report_brief_mode_uses_brief_suffix(tmp_path, monkeypatch):
@@ -1651,3 +1787,116 @@ def test_issue_templates_match_github_form_schema():
 
     assert not problems, ("Issue 模板不符合 GitHub 官方 issue-forms schema：\n  " +
                            "\n  ".join(problems))
+
+
+# ------------------------------------------------- 存量基线（2026-10-29）
+
+def _mk_lib(tmp_path):
+    """造一个最小的报告库目录：`<日期>-<模式>-<议题>/<文件>.md`。
+
+    不需要真的在 `BIG_REPORT_DIR` 下——`parse_folder` 只认目录名，
+    基线文件落在该目录的上一级（= 这里就是 tmp_path）。
+    """
+    d = tmp_path / "20261029-深入分析-基线测试"
+    d.mkdir()
+    return d / "基线测试·B站信息深入报告.md"
+
+
+def test_baseline_index_separates_count_and_identity():
+    rb = _rb()
+    W = rb.Warn
+    idx = rb._index([
+        W("cell.long", "x", n=18),
+        W("cell.long", "x", n=2),
+        W("map.dup", "x", keys=("1", "2")),
+        W("map.dup", "x", keys=("2", "3")),
+    ])
+    assert idx["cell.long"] == {"n": 20}, "计数型必须累加"
+    assert idx["map.dup"] == {"keys": ["1", "2", "3"]}, "身份型必须去重并入"
+    assert "keys" not in idx["cell.long"] and "n" not in idx["map.dup"]
+
+
+def test_baseline_compare_reports_only_new_identity():
+    """修好 2 条、又新增 2 条，不能被判成「没变化」——这是身份比计数优先的理由。"""
+    rb = _rb()
+    W = rb.Warn
+    entry = {"map.miss": {"keys": ["10", "20"]}}
+
+    # 全是新的 → 整条报出，不加「新增」注解：整条本来就是新的
+    shown, suppressed, _ = rb._compare(
+        [W("map.miss", "缺号", keys=("30", "40"))], entry)
+    assert len(shown) == 1 and suppressed == 0
+    assert shown[0].msg == "缺号"
+
+    # 部分重合 → 只标真正新增的那些，已被抑制的 10 不该出现在注解里
+    shown, suppressed, _ = rb._compare(
+        [W("map.miss", "缺号", keys=("10", "30"))], entry)
+    assert len(shown) == 1 and suppressed == 1
+    assert shown[0].msg == "缺号（新增 30）"
+
+
+def test_baseline_compare_count_only_fires_when_growing():
+    rb = _rb()
+    W = rb.Warn
+    entry = {"cell.long": {"n": 18}}
+    assert rb._compare([W("cell.long", "x", n=18)], entry)[0] == []
+    assert rb._compare([W("cell.long", "x", n=12)], entry)[0] == [], "变少不该报"
+    shown, _, resolved = rb._compare([W("cell.long", "x", n=21)], entry)
+    assert len(shown) == 1 and "较存量 +3" in shown[0].msg
+    assert resolved == 0
+    # 存量减少要能算出「已修好几处」，否则没法提示刷新基线
+    assert rb._compare([W("cell.long", "x", n=12)], entry)[2] == 6
+
+
+def test_baseline_roundtrip_and_new_warning_detected(tmp_path, capsys):
+    rb = _rb()
+    md = _mk_lib(tmp_path)
+    # 先造一个"存量里已经有 1 个长单元格"的版本：否则整类是新的，
+    # 走的是"整条报出"而不是"较存量 +N"，测不到增量分支。
+    one_long = MD_OK.replace("| 有料 |", "| " + "长" * 90 + " |")
+    md.write_text(one_long, encoding="utf-8")
+
+    # 首次：没有基线，全部报出来
+    assert rb.check(str(md)) == 0
+    assert "未找到基线" in capsys.readouterr().out
+
+    # 冻结为存量
+    assert rb.check(str(md), update=True) == 0
+    assert (tmp_path / rb.BASELINE_NAME).exists()
+    capsys.readouterr()
+
+    # 再跑：0 新增，存量被抑制
+    assert rb.check(str(md)) == 0
+    out = capsys.readouterr().out
+    assert "[WARN]" not in out and "已抑制" in out
+
+    # 再加一个超长单元格 → 必须报「较存量 +1」
+    two_long = one_long.replace("| 复述 |", "| " + "长" * 90 + " |")
+    md.write_text(two_long, encoding="utf-8")
+    assert rb.check(str(md)) == 0
+    out = capsys.readouterr().out
+    assert "较存量 +1" in out
+
+    # --strict 把新增当失败
+    assert rb.check(str(md), strict=True) == 1
+
+
+def test_baseline_hard_errors_never_suppressed(tmp_path, capsys):
+    """硬错不进基线：缺 §六 是「这份报告交不了」，冻结一百次也还是失败。"""
+    rb = _rb()
+    md = _mk_lib(tmp_path)
+    body = MD_OK.split("## 六、信源地图")[0]
+    md.write_text(body, encoding="utf-8")
+    assert rb.check(str(md), update=True) == 1
+    capsys.readouterr()
+    assert rb.check(str(md)) == 1
+
+
+def test_baseline_skipped_outside_report_library(tmp_path, capsys):
+    """草稿（不在 `<日期>-<模式>-<议题>` 目录里）不写基线，也不谎报"未找到基线"。"""
+    rb = _rb()
+    md = tmp_path / "草稿.md"
+    md.write_text(MD_OK, encoding="utf-8")
+    assert rb.check(str(md), update=True) == 0
+    assert not (tmp_path / rb.BASELINE_NAME).exists()
+    assert "不在报告库目录里" in capsys.readouterr().out
